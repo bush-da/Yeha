@@ -32,9 +32,9 @@ class BaseModel:
         if not kwargs.get('id'):
             self.id = str(uuid4())
         if not kwargs.get('created_at'):
-            self.created_at = self.updated_at = datatime.utcnow()
+            self.created_at = self.updated_at = datetime.utcnow()
         else:
-            self.created_at = datetime.strptime(kwargs['updated_at'], "%Y-%m-%dT%H:%M:%S.%f")
+            self.created_at = datetime.strptime(kwargs['created_at'], "%Y-%m-%dT%H:%M:%S.%f")
             self.updated_at = datetime.strptime(kwargs['updated_at'], "%Y-%m-%dT%H:%M:%S.%f")
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -52,6 +52,7 @@ class BaseModel:
         my_dict['__class__'] = self.__class__.__name__
         my_dict['created_at'] = self.created_at.isoformat()
         my_dict['updated_at'] = self.updated_at.isoformat()
+        return my_dict
 
     def delete(self):
         """Delete the current instance from the storage"""
