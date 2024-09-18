@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Defines the Report class for flagging posts"""
-from sqlalchemy import Column, Text, ForeignKey
+from sqlalchemy import Column, Text, ForeignKey, String
 from sqlalchemy.orm import relationship
 from models.base_model import BaseModel, Base
 
