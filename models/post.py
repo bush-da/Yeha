@@ -3,22 +3,23 @@
 from sqlalchemy import Column, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from models.base_model import BaseModel, Base
+from models.post_tag import post_tag
 
 class Post(BaseModel, Base):
     """Represents a blog post"""
     __tablename__ = 'posts'
 
     title = Column(String(255), nullable=False)
-    content = Column(Text, nullable=False)
     author_id = Column(String(60), ForeignKey('users.id'), nullable=False)
     category_id = Column(String(60), ForeignKey('categories.id'), nullable=True)
 
     # Relationships
+    category = relationship('Category', back_populates='posts')
     contents = relationship("Content", back_populates="post", cascade="all, delete-orphan")
     author = relationship("User", back_populates="posts")
     comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="post", cascade="all, delete-orphan")
-    tags = relationship("Tag", secondary="post_tags", back_populates="posts", cascade="all, delete-orphan")
+    tags = relationship("Tag", secondary=post_tag, back_populates="posts")
 
     def count_comment(self):
         """Return the number of comment for the post."""
