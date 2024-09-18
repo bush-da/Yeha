@@ -10,7 +10,7 @@ class User(BaseModel, Base):
 
     username = Column(String(45), nullable=False)
     email = Column(String(45), nullable=False, unique=True)
-    password = Column(String(128), nullable=False)
+    password = Column(String(255), nullable=False)
     profile_picture = Column(String(255), nullable=True)
     gender = Column(Enum('male', 'female', 'other'))
     bio = Column(Text, nullable=True)
@@ -22,3 +22,4 @@ class User(BaseModel, Base):
     posts = relationship("Post", back_populates="author", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="author", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="author", cascade="all, delete-orphan")
+
