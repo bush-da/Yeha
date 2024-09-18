@@ -9,6 +9,10 @@ Welcome to **Yeha**, a modern, open-source blogging platform designed to let you
 - **Author(s)**: [LinkedIn Profile](https://www.linkedin.com/in/daniel-tujuma-702454271)
 
 ---
+## 📸Screenshots
+Here's a glimpse of the project in action:
+
+![Project Screenshot](./assets/screenshot.png)
 
 ## 📖 Introduction
 
