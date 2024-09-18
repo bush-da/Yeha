@@ -11,4 +11,4 @@ class Category(BaseModel, Base):
     name = Column(String(45), nullable=False, unique=True)
 
     # Relationships
-    posts = relationship("Post", back_populates="category", cascade="all, delete-orphan")
+    posts = relationship("Post", back_populates="category")
