@@ -12,7 +12,6 @@ from models.tag import Tag
 from models.report import Report
 from models.flagged import FlaggedContent
 from models.follower import Follower
-from models.post_tag import PostTag
 
 class DBStorage:
     __engine = None
@@ -66,7 +65,7 @@ class DBStorage:
 
     def close(self):
         """Close the current session."""
-        self.__session.remove()
+        self.__session.close()
 
     def get_model(self, name):
         """Get the model class from its name."""
