@@ -11,8 +11,9 @@ Welcome to **Yeha**, a modern, open-source blogging platform designed to let you
 ---
 ## 📸Screenshots
 Here's a glimpse of the project in action:
+## Screenshots
 
-![Project Screenshot](./assets/screenshot.png)
+<img src="./assets/screenshot.png" alt="Project Screenshot" width="500" height="300">
 
 ## 📖 Introduction
 
