@@ -13,7 +13,7 @@ Welcome to **Yeha**, a modern, open-source blogging platform designed to let you
 Here's a glimpse of the project in action:
 ## Screenshots
 
-<img src="./assets/screenshot.png" alt="Project Screenshot" width="500" height="300">
+<img src="./assets/screenshot.png" alt="Project Screenshot" width="550" height="300">
 
 ## 📖 Introduction
 
