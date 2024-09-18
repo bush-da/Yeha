@@ -4,7 +4,8 @@ from models.base_model import Base, BaseModel
 from models.user import User
 from models.comment import Comment
 from models.post import Post
-from sqlalchemy import Boolean
+from sqlalchemy import Boolean, Column, String, Text, ForeignKey
+from sqlalchemy.orm import relationship
 
 class FlaggedContent(BaseModel, Base):
     __tablename__ = 'flagged_content'
@@ -17,5 +18,5 @@ class FlaggedContent(BaseModel, Base):
     action_taken = Column(String(64), nullable=True)  # Admin's action ('deleted', 'warned', etc.)
 
     user = relationship('User', backref='flagged_reports')
-    post = relationship('Post', backref='flags', cascade="all, delete-orphan")
-    comment = relationship('Comment', backref='flags', cascade="all, delete-orphan")
+    post = relationship('Post', backref='flags')
+    comment = relationship('Comment', backref='flags')
