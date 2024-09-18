@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeha - About</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="{{ url_for('home.index') }}">Yeha</a>
+        </div>
+        <nav class="nav-links">
+            <a href="{{ url_for('home.index') }}">Home</a>
+            <a href="{{ url_for('about.about') }}" class="active">About</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('profile.profile', user_id=session['user_id']) }}" class="profile">Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="sign-in">Sign In</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        <section class="about-section">
+            <div class="about-container">
+                <h2>About Yeha</h2>
+                <p>
+                    The Yeha blog project was inspired by my passion for connecting with people through technology. I have always enjoyed exploring new technologies and sharing knowledge with others. This project began as a way to create a platform where technology enthusiasts can share their insights, experiences, and tutorials. The idea was to build a community-driven blog site that would allow individuals to express their thoughts on topics such as programming, web development, and emerging tech trends.
+                </p>
+                <p>
+                    This project is also a part of my portfolio project for ALX School. You can learn more about ALX School's programs <a href="https://www.alxafrica.com" target="_blank" rel="noopener noreferrer">here</a>.
+                </p>
+                <p>
+                    You can find the source code for this project on GitHub: <a href="https://github.com/bush-da/Yeha" target="_blank" rel="noopener noreferrer">Yeha Blog GitHub Repository</a>.
+                </p>
+                <h3>Meet the Team</h3>
+                <ul class="team-members">
+                    <li>
+                        <h4>Daniel Tujuma</h4>
+                        <p><a href="https://www.linkedin.com/in/daniel-tujuma-702454271" target="_blank" rel="noopener noreferrer">LinkedIn</a> | <a href="https://github.com/bush-da" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="https://twitter.com/DTsevani" target="_blank" rel="noopener noreferrer">Twitter</a></p>
+                    </li>
+                    <!-- Add more team members as needed -->
+                </ul>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

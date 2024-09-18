@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Post</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+    <script>
+        function addContentBlock() {
+            const container = document.getElementById('content-blocks');
+            const blockIndex = container.children.length;
+            
+            const newBlock = document.createElement('div');
+            newBlock.className = 'content-block';
+            newBlock.innerHTML = `
+                <label for="block-type-${blockIndex}">Content Type:</label>
+                <select id="block-type-${blockIndex}" name="block_type_${blockIndex}" onchange="toggleFields(${blockIndex})">
+                    <option value="text">Text</option>
+                    <option value="image">Image</option>
+                </select>
+                
+                <div id="text-fields-${blockIndex}" class="content-fields">
+                    <label for="text-content-${blockIndex}">Text:</label>
+                    <textarea id="text-content-${blockIndex}" name="text_content_${blockIndex}" rows="8" cols="80" placeholder="Write your paragraph(s) here..."></textarea>
+                </div>
+                
+                <div id="image-fields-${blockIndex}" class="content-fields" style="display: none;">
+                    <label for="image-content-${blockIndex}">Image:</label>
+                    <input type="file" id="image-content-${blockIndex}" name="image_content_${blockIndex}">
+                </div>
+
+                <button type="button" onclick="removeContentBlock(this)">Remove Block</button>
+            `;
+            container.appendChild(newBlock);
+        }
+
+        function toggleFields(index) {
+            const type = document.getElementById(`block-type-${index}`).value;
+            const textFields = document.getElementById(`text-fields-${index}`);
+            const imageFields = document.getElementById(`image-fields-${index}`);
+
+            if (type === 'text') {
+                textFields.style.display = 'block';
+                imageFields.style.display = 'none';
+            } else {
+                textFields.style.display = 'none';
+                imageFields.style.display = 'block';
+            }
+        }
+
+        function removeContentBlock(button) {
+            button.parentElement.remove();
+        }
+    </script>
+</head>
+<body>
+    <h1>Create New Post</h1>
+    <form action="{{ url_for('post.new_post') }}" method="POST" enctype="multipart/form-data">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="category">Category:</label>
+        <select id="category" name="category">
+            <!-- Assuming categories are dynamically populated -->
+            {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="tags">Tags (comma-separated):</label>
+        <input type="text" id="tags" name="tags">
+
+        <div id="content-blocks">
+            <!-- Dynamic content blocks will be added here -->
+        </div>
+
+        <button type="button" onclick="addContentBlock()">Add Content Block</button>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

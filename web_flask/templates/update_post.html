@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Blog Post</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Update Blog Post</h1>
+    </header>
+
+    <main>
+        <form action="{{ url_for('post.update', post_id=post.id) }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="title">Post Title</label>
+                <input type="text" id="title" name="title" value="{{ post.title }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="content">Content</label>
+                <textarea id="content" name="content" rows="10" required>{{ post.content }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="tags">Tags (comma-separated)</label>
+                <input type="text" id="tags" name="tags" value="{{ ','.join([tag.name for tag in post.tags]) }}">
+            </div>
+
+            <div class="form-group">
+                <label for="image">Upload New Image (optional)</label>
+                <input type="file" id="image" name="image">
+                {% if post.image_url %}
+                    <img src="{{ url_for('static', filename='images/' + post.image_url) }}" alt="Current Image" class="current-image">
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="submit-btn">Update Post</button>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <a href="{{ url_for('profile.profile', user_id=session.get('user_id')) }}">Back to Profile</a>
+    </footer>
+</body>
+</html>
