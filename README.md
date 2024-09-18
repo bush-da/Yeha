@@ -17,9 +17,22 @@ Here's a glimpse of the project in action:
 
 ## 📖 Introduction
 
-Yeha is a full-featured blogging platform developed with a modern stack of technologies, focusing on ease of use and scalability. Its main features include user authentication, blog post creation, tagging, content management, and post engagement through likes.
+Welcome to Yeha, a clean and simple blog platform built with the power of Python, Flask, and SQLAlchemy! Inspired by a need for expressive and easy-to-use blog websites, Yeha was designed to empower users to publish and share their thoughts, ideas, and creativity.
 
-The system allows users to create engaging content, categorize it with tags, and interact with posts through a flexible and intuitive user interface. Whether you're a tech enthusiast or a lifestyle blogger, Yeha is built to empower your creativity.
+Its main features include user authentication, blog post creation, tagging, content management, and post engagement through likes. The system allows users to create engaging content, categorize it with tags, and interact with posts through a flexible and intuitive user interface. Whether you're a tech enthusiast or a lifestyle blogger, Yeha is built to empower your creativity.
+
+## 🌟 Inspiration 
+
+In the age of information overload, I wanted to create a blog platform that’s simple but powerful, focusing on ease of use for both readers and writers. Whether it’s a personal diary or a professional content platform, Yeha aims to provide a minimalist yet robust experience. The journey was filled with technical challenges—especially in the way we handle relationships between users and posts, as well as ensuring the site can scale as more users join and interact.
+
+## 🎯 Project Goals and Features 
+
+    📝 Dynamic Blog Posting: Create, edit, and delete blog posts with rich text formatting.
+    🧑‍💻 User Accounts: Users can sign up, manage their profile, and post content.
+    🔖 Tag System: Organize posts by tags for better discoverability.
+    ❤️ Like System: Track and display the number of likes for each post.
+    🔍 Search: Find posts by tags.
+    📊 Admin Dashboard: Monitor posts, tags, and users through a comprehensive admin interface.
 
 ## 🛠️ Installation
 
@@ -73,6 +86,15 @@ Yeha is simple yet powerful. Here are the key features you can explore:
 - **Post Engagement**: Track likes on posts and follow user activity.
 - **Search and Browse**: Browse content by tags, search for articles, and explore trending topics.
 
+
+## 💡Technical Details 
+Database Design:
+
+The database uses a relational model with SQLAlchemy to handle users, posts, tags, and likes. Here's an overview of the key relationships:
+
+    User ↔ Posts: A one-to-many relationship allows users to author multiple posts. Each post tracks its creator using author_id.
+    Posts ↔ Tags: A many-to-many relationship where posts can have multiple tags, enabling effective content categorization.
+    Posts ↔ Likes: We track the number of likes for each post using a separate table to maintain scalability.
 ---
 
 ## 🤝 Contributing
