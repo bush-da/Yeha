@@ -21,7 +21,7 @@ Welcome to Yeha, a clean and simple blog platform built with the power of Python
 
 Its main features include user authentication, blog post creation, tagging, content management, and post engagement through likes. The system allows users to create engaging content, categorize it with tags, and interact with posts through a flexible and intuitive user interface. Whether you're a tech enthusiast or a lifestyle blogger, Yeha is built to empower your creativity.
 
-## 🌟 Inspiration 
+## 🌟 Inspiration
 
 In the age of information overload, I wanted to create a blog platform that’s simple but powerful, focusing on ease of use for both readers and writers. Whether it’s a personal diary or a professional content platform, Yeha aims to provide a minimalist yet robust experience. The journey was filled with technical challenges—especially in the way we handle relationships between users and posts, as well as ensuring the site can scale as more users join and interact.
 
@@ -40,14 +40,14 @@ Getting Yeha up and running on your local environment is simple! Follow these st
 
 ### Prerequisites
 - Python 3.8+
-- MySQL or SQLite
+- MySQL
 - Flask
 
 ### Steps
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-repo/yeha-blog.git
-   cd yeha-blog
+   git clone https://github.com/bush-da/Yeha.git
+   cd Yeha
    ```
 
 2. **Create a Virtual Environment**
