@@ -5,7 +5,7 @@ Welcome to **Yeha**, a modern, open-source blogging platform designed to let you
 
 ## 🌐 Live Demo and Author Info
 - **Live Demo**: [coming soon](https://github.com/bush-da/Yeha)
-- **Project Blog**: [Final Project Article](https://your-blog-article.com)
+- **Project Blog**: [Final Project Article](https://www.linkedin.com/posts/daniel-tujuma-702454271_introducing-the-yeha-project-a-web-application-activity-7242165583499132929-qr_j?utm_source=share&utm_medium=member_desktop)
 - **Author(s)**: [LinkedIn Profile](https://www.linkedin.com/in/daniel-tujuma-702454271)
 
 ---
