@@ -11,9 +11,11 @@ def redirect_home():
 
 @home_bp.route('/home', methods=['GET'])
 def index():
+    # To filter using tags
     tag_ids = request.args.get('tags')
 
     if tag_ids:
+        # If tag button is clicked
         # Convert the comma-separated string into a list of tag IDs
         tag_ids = tag_ids.split(',')
 
@@ -29,4 +31,6 @@ def index():
         posts = storage.all(Post).values()
 
     tags = storage.all(Tag).values()  # Fetch all tags for display
+    for post in posts:
+        post.contents = sorted(post.contents, key=lambda c: c.paragraph)
     return render_template('index.html', posts=posts, tags=tags)
