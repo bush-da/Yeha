@@ -22,4 +22,5 @@ class User(BaseModel, Base):
     posts = relationship("Post", back_populates="author", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="author", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="author", cascade="all, delete-orphan")
-
+    # following = relationship("Follower", back_populates="follower")
+    # followers = relationship("Follower", back_populates="followed")
