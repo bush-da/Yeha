@@ -14,7 +14,7 @@ def add_comment(post_id):
 
     comment_text = request.form.get('comment')
     if comment_text:
-        new_comment = Comment(user_id=user_id, post_id=post_id, text=comment_text)
+        new_comment = Comment(author_id=user_id, post_id=post_id, content=comment_text)
         storage.new(new_comment)
         storage.save()
 
