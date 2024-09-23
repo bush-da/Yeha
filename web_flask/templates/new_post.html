@@ -4,8 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create New Post</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
-    <script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+</head>
+<body>
+  <header>
+      <div class="logo">
+            <a href="{{ url_for('home.index') }}">Yeha</a>
+      </div>
+        <nav class="nav-links">
+            <a href="{{ url_for('home.index') }}" class="active">Home</a>
+            <a href="{{ url_for('about.about') }}">About</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('profile.profile', user_id=session['user_id']) }}" class="profile">Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="sign-in">Sign In</a>
+            {% endif %}
+        </nav>
+    </header>
+    <h1>Create New Post</h1>
+    <form action="{{ url_for('post.new_post') }}" method="POST" enctype="multipart/form-data">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="category">Category:</label>
+        <select id="category" name="category">
+            <!-- Assuming categories are dynamically populated -->
+            {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="tags">Tags (comma-separated):</label>
+        <input type="text" id="tags" name="tags">
+
+        <div id="content-blocks">
+            <!-- Dynamic content blocks will be added here -->
+        </div>
+
+        <button type="button" onclick="addContentBlock()">Add Content Block</button>
+        <button type="submit">Submit</button>
+    </form>
+        <script>
         function addContentBlock() {
             const container = document.getElementById('content-blocks');
             const blockIndex = container.children.length;
@@ -52,30 +92,6 @@
             button.parentElement.remove();
         }
     </script>
-</head>
-<body>
-    <h1>Create New Post</h1>
-    <form action="{{ url_for('post.new_post') }}" method="POST" enctype="multipart/form-data">
-        <label for="title">Title:</label>
-        <input type="text" id="title" name="title" required>
 
-        <label for="category">Category:</label>
-        <select id="category" name="category">
-            <!-- Assuming categories are dynamically populated -->
-            {% for category in categories %}
-                <option value="{{ category.id }}">{{ category.name }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="tags">Tags (comma-separated):</label>
-        <input type="text" id="tags" name="tags">
-
-        <div id="content-blocks">
-            <!-- Dynamic content blocks will be added here -->
-        </div>
-
-        <button type="button" onclick="addContentBlock()">Add Content Block</button>
-        <button type="submit">Submit</button>
-    </form>
 </body>
 </html>
