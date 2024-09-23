@@ -36,13 +36,13 @@ def update_profile(user_id):
         flash('Unauthorized to update this profile!')
         return redirect(url_for('profile.profile', user_id=user_id))
 
-    name = request.form.get('name')
+    username = request.form.get('username')
     email = request.form.get('email')
     bio = request.form.get('bio')
     profile_picture = request.files.get('profile_picture')
 
-    if name:
-        user.name = name
+    if username:
+        user.username = username
     if email:
         user.email = email
     if bio:
@@ -54,45 +54,45 @@ def update_profile(user_id):
     flash('Profile updated successfully!')
     return redirect(url_for('profile.profile', user_id=user_id))
 
-@profile_bp.route('/<user_id>/follow', methods=['POST'])
-def follow_user(user_id):
-    current_user_id = session.get('user_id')
-    user_to_follow = storage.all(User).get(f"User.{user_id}")
+# @profile_bp.route('/<user_id>/follow', methods=['POST'])
+# def follow_user(user_id):
+#     current_user_id = session.get('user_id')
+#     user_to_follow = storage.all(User).get(f"User.{user_id}")
 
-    if not user_to_follow:
-        flash('User not found!')
-        return redirect(url_for('profile.profile', user_id=user_id))
+#     if not user_to_follow:
+#         flash('User not found!')
+#         return redirect(url_for('profile.profile', user_id=user_id))
 
-    current_user = storage.all(User).get(f"User.{current_user_id}")
+#     current_user = storage.all(User).get(f"User.{current_user_id}")
 
-    if user_id in current_user.following:
-        flash('You are already following this user!')
-    else:
-        current_user.following.append(user_id)
-        storage.save()
-        flash('You are now following this user!')
+#     if user_id in current_user.following:
+#         flash('You are already following this user!')
+#     else:
+#         current_user.following.append(user_id)
+#         storage.save()
+#         flash('You are now following this user!')
 
-    return redirect(url_for('profile.profile', user_id=user_id))
+#     return redirect(url_for('profile.profile', user_id=user_id))
 
-@profile_bp.route('/<user_id>/unfollow', methods=['POST'])
-def unfollow_user(user_id):
-    current_user_id = session.get('user_id')
-    user_to_unfollow = storage.all(User).get(f"User.{user_id}")
+# @profile_bp.route('/<user_id>/unfollow', methods=['POST'])
+# def unfollow_user(user_id):
+#     current_user_id = session.get('user_id')
+#     user_to_unfollow = storage.all(User).get(f"User.{user_id}")
 
-    if not user_to_unfollow:
-        flash('User not found!')
-        return redirect(url_for('profile.profile', user_id=user_id))
+#     if not user_to_unfollow:
+#         flash('User not found!')
+#         return redirect(url_for('profile.profile', user_id=user_id))
 
-    current_user = storage.all(User).get(f"User.{current_user_id}")
+#     current_user = storage.all(User).get(f"User.{current_user_id}")
 
-    if user_id not in current_user.following:
-        flash('You are not following this user!')
-    else:
-        current_user.following.remove(user_id)
-        storage.save()
-        flash('You have unfollowed this user!')
+#     if user_id not in current_user.following:
+#         flash('You are not following this user!')
+#     else:
+#         current_user.following.remove(user_id)
+#         storage.save()
+#         flash('You have unfollowed this user!')
 
-    return redirect(url_for('profile.profile', user_id=user_id))
+#     return redirect(url_for('profile.profile', user_id=user_id))
 
 def save_profile_picture(profile_picture):
     # Save the profile picture and return the filename
