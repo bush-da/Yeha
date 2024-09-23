@@ -12,19 +12,24 @@ def register():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        conf_password = request.form.get('confirm_password')
         gender = request.form.get('gender')
 
         if not username or not email or not password:
             flash('All fields are required!')
             return redirect(url_for('auth.register'))
-
-        existing_user = storage.all(User).get(f"User.{email}")
-        if existing_user:
-            flash('User already exists!')
+        if conf_password != password:
+            flash('Password not same')
             return redirect(url_for('auth.register'))
 
+        users = storage.all(User)
+        for user in users.values():
+            if user.email == email or user.name == name:
+                flash('User already exists!')
+                return redirect(url_for('auth.register'))
+
         hashed_password = generate_password_hash(password)
-        new_user = User(username=username, email=email, password=hashed_password, bio='', )
+        new_user = User(username=username, email=email, password=hashed_password, bio='')
         storage.new(new_user)
         storage.save()
 
@@ -51,7 +56,7 @@ def login():
             flash('Invalid credentials!')
             return redirect(url_for('auth.login'))
 
-        # Assuming you use session management to track logged-in users
+        # use session management to track logged-in users
         session['user_id'] = user.id
         flash('Login successful!')
         return redirect(url_for('home.index'))
