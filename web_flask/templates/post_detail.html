@@ -9,7 +9,7 @@
 <body>
     <header>
         <div class="logo">
-            <a href="#">Yeha</a>
+            <a href="{{ url_for('home.index') }}">Yeha</a>
         </div>
         <nav class="nav-links">
             <a href="{{ url_for('home.index') }}" class="active">Home</a>
@@ -26,19 +26,25 @@
     <main>
         <section class="post-detail">
             <div class="post-header">
-	      <img src="{{ url_for('static', filename='images/' + (post.author.profile_picture if post.author.profile_picture else 'default_profile.png')) }}" alt="Author's profile picture" class="profile-pic">
+	      <a href="/profile/{{ post.author.id }}">
+	      <img src="{{ url_for('static', filename='images/' + (post.author.profile_picture if post.author.profile_picture else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
                 <div class="author-info">
-                    <h3 class="author-name">{{ post.author.name }}</h3>
+                    <h3 class="author-name">{{ post.author.username }}</h3></a>
                     <p class="author-bio">{{ post.author.bio }}</p>
                     {% if session.get('user_id') and post.author_id != session['user_id'] %}
-                    <form action="{{ url_for('profile.follow_user', user_id=post.author_id) }}" method="POST">
+                    <form action="{{ url_for('follow.follow_user', user_id=post.author_id) }}" method="POST">
                         <button type="submit" class="follow-btn">Follow</button>
                     </form>
                     {% endif %}
                 </div>
             </div>
             <h2>{{ post.title }}</h2>
-            <p>{{ post.content }}</p>
+	    {% if session.get('user_id') and post.author_id == session['user_id'] %}
+	    <a href="{{ url_for('post.update_post', post_id=post.id) }}" class="update-btn">Edit</a>
+              <form action="{{ url_for('post.delete_post', post_id=post.id) }}" method="POST" style="display:inline;">
+                <button type="submit" class="delete-btn">Delete</button>
+              </form>
+	      {% endif %}
 	    {% for content in post.contents %}
 		    {% if content.file_url %}
 		        <img src="{{ content.file_url }}" alt="Post image">
@@ -49,6 +55,7 @@
 
             <div class="post-actions">
                 <form action="{{ url_for('like.like_post', post_id=post.id) }}" method="POST">
+		  <p> likes: {{ count_likes }} </p>
                     <button type="submit" class="like-btn">
                         <img src="{{ url_for('static', filename='images/like.png') }}" alt="Like" class="action-icon">
                     </button>
@@ -71,7 +78,7 @@
                 <h3>Comments</h3>
                 {% for comment in comments %}
                 <div class="comment">
-                    <p>{{ comment.user.name }}: {{ comment.content }}</p>
+                    <p><a href="/profile/{{ comment.author_id }}">{{ comment.author.username }}</a>: {{ comment.content }}</p>
                 </div>
                 {% endfor %}
             </section>
