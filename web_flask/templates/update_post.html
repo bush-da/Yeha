@@ -3,47 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Blog Post</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+    <title>Update Post</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
 </head>
 <body>
     <header>
-        <h1>Update Blog Post</h1>
+      <div class="logo">
+            <a href="{{ url_for('home.index') }}">Yeha</a>
+      </div>
+        <nav class="nav-links">
+            <a href="{{ url_for('home.index') }}" class="active">Home</a>
+            <a href="{{ url_for('about.about') }}">About</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('profile.profile', user_id=session['user_id']) }}" class="profile">Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="sign-in">Sign In</a>
+            {% endif %}
+        </nav>
     </header>
 
-    <main>
-        <form action="{{ url_for('post.update', post_id=post.id) }}" method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="title">Post Title</label>
-                <input type="text" id="title" name="title" value="{{ post.title }}" required>
-            </div>
+    <h1>Update Post</h1>
+    <form action="{{ url_for('post.update_post', post_id=post.id) }}" method="POST" enctype="multipart/form-data">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" value="{{ post.title }}" required>
 
-            <div class="form-group">
-                <label for="content">Content</label>
-                <textarea id="content" name="content" rows="10" required>{{ post.content }}</textarea>
-            </div>
+        <label for="category">Category:</label>
+        <select id="category" name="category">
+            <!-- Assuming categories are dynamically populated -->
+            {% for category in categories %}
+                <option value="{{ category.id }}" {% if category.id == post.category.id %} selected {% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
 
-            <div class="form-group">
-                <label for="tags">Tags (comma-separated)</label>
-                <input type="text" id="tags" name="tags" value="{{ ','.join([tag.name for tag in post.tags]) }}">
-            </div>
+        <label for="tags">Tags (comma-separated):</label>
+	<input type="text" id="tags" name="tags" value="{% for tag in post.tags %}{{ tag.name }}{% if not loop.last %},{% endif %}{% endfor %}">
+        <div id="content-blocks">
+            <!-- Prepopulate existing content blocks -->
+            {% for content in post.contents %}
+                <div class="content-block">
+                    <!-- Hidden input to pass the content_id of existing content -->
+                    <input type="hidden" name="content_id_{{ loop.index0 }}" value="{{ content.id }}">
 
-            <div class="form-group">
-                <label for="image">Upload New Image (optional)</label>
-                <input type="file" id="image" name="image">
-                {% if post.image_url %}
-                    <img src="{{ url_for('static', filename='images/' + post.image_url) }}" alt="Current Image" class="current-image">
-                {% endif %}
-            </div>
+                    <label for="block-type-{{ loop.index0 }}">Content Type:</label>
+                    <select id="block-type-{{ loop.index0 }}" name="block_type_{{ loop.index0 }}" onchange="toggleFields({{ loop.index0 }})">
+                        <option value="text" {% if content.content %} selected {% endif %}>Text</option>
+                        <option value="image" {% if content.file_url %} selected {% endif %}>Image</option>
+                    </select>
 
-            <div class="form-group">
-                <button type="submit" class="submit-btn">Update Post</button>
-            </div>
-        </form>
-    </main>
+                    <!-- Text content -->
+                    <div id="text-fields-{{ loop.index0 }}" class="content-fields" {% if content.file_url %} style="display: none;" {% endif %}>
+                        <label for="text-content-{{ loop.index0 }}">Text:</label>
+                        <textarea id="text-content-{{ loop.index0 }}" name="text_content_{{ loop.index0 }}" rows="8" cols="80">{{ content.content }}</textarea>
+                    </div>
 
-    <footer>
-        <a href="{{ url_for('profile.profile', user_id=session.get('user_id')) }}">Back to Profile</a>
-    </footer>
+                    <!-- Image content -->
+                    <div id="image-fields-{{ loop.index0 }}" class="content-fields" {% if not content.file_url %} style="display: none;" {% endif %}>
+                        <label for="image-content-{{ loop.index0 }}">Image:</label>
+                        <input type="file" id="image-content-{{ loop.index0 }}" name="image_content_{{ loop.index0 }}">
+                        <img src="{{ content.file_url }}" alt="Current Image" style="max-width: 100px;">
+                    </div>
+
+                    <button type="button" onclick="removeContentBlock(this)">Remove Block</button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" onclick="addContentBlock()">Add Content Block</button>
+        <button type="submit">Update Post</button>
+    </form>
+        <script>
+        function addContentBlock() {
+            const container = document.getElementById('content-blocks');
+            const blockIndex = container.children.length;
+            
+            const newBlock = document.createElement('div');
+            newBlock.className = 'content-block';
+            newBlock.innerHTML = `
+                <label for="block-type-${blockIndex}">Content Type:</label>
+                <select id="block-type-${blockIndex}" name="block_type_${blockIndex}" onchange="toggleFields(${blockIndex})">
+                    <option value="text">Text</option>
+                    <option value="image">Image</option>
+                </select>
+                
+                <div id="text-fields-${blockIndex}" class="content-fields">
+                    <label for="text-content-${blockIndex}">Text:</label>
+                    <textarea id="text-content-${blockIndex}" name="text_content_${blockIndex}" rows="8" cols="80" placeholder="Write your paragraph(s) here..."></textarea>
+                </div>
+                
+                <div id="image-fields-${blockIndex}" class="content-fields" style="display: none;">
+                    <label for="image-content-${blockIndex}">Image:</label>
+                    <input type="file" id="image-content-${blockIndex}" name="image_content_${blockIndex}">
+                </div>
+
+                <button type="button" onclick="removeContentBlock(this)">Remove Block</button>
+            `;
+            container.appendChild(newBlock);
+        }
+
+        function toggleFields(index) {
+            const type = document.getElementById(`block-type-${index}`).value;
+            const textFields = document.getElementById(`text-fields-${index}`);
+            const imageFields = document.getElementById(`image-fields-${index}`);
+
+            if (type === 'text') {
+                textFields.style.display = 'block';
+                imageFields.style.display = 'none';
+            } else {
+                textFields.style.display = 'none';
+                imageFields.style.display = 'block';
+            }
+        }
+	function removeContentBlock(button) {
+        // Check if the block has existing data
+        const contentIdInput = button.parentElement.querySelector('input[type="hidden"]');
+
+        if (contentIdInput) {
+            // If the block contains data (i.e., there's a hidden content ID), mark it for deletion
+            const contentId = contentIdInput.value;
+            const deleteInput = document.createElement('input');
+            deleteInput.type = 'hidden';
+            deleteInput.name = `delete_content_${contentId}`;
+            deleteInput.value = 'true';
+            button.parentElement.appendChild(deleteInput);
+        }
+
+        // Hide the block visually or remove it
+        button.parentElement.style.display = 'none';  // Optional: Just hide it
+    }
+    </script>
+
 </body>
 </html>
+
