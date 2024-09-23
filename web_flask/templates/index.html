@@ -32,14 +32,15 @@
     <main>
         <section class="content">
             {% for post in posts %}
-            <article class="blog-post">
+           <article class="blog-post">
                 <div class="post-header">
-		  <img src="{{ url_for('static', filename='images/' + (post.author.profile_picture if post.author.profile_picture else 'default_profile.png')) }}" alt="Author's profile picture" class="profile-pic">
+		  <a href="/profile/{{ post.author_id }}">
+		  <img src="{{ url_for('static', filename='images/' + (post.author.profile_picture if post.author.profile_picture else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
                   <div class="author-info">
-                        <h3 class="author-name">{{ post.author.username }}</h3>
+                        <h3 class="author-name">{{ post.author.username }}</h3></a>
                         <p class="author-bio">{{ post.author.bio }}</p>
-                        {% if session.get('user_id') %}
-                        <form action="{{ url_for('profile.follow_user', user_id=post.author.id) }}" method="POST">
+                        {% if session.get('user_id') and session.get('user_id') != post.author.id %}
+                        <form action="{{ url_for('follow.follow_user', user_id=post.author.id) }}" method="POST">
                             <button type="submit" class="follow-btn">Follow</button>
                         </form>
                         {% endif %}
@@ -62,6 +63,7 @@
                             <img src="{{ url_for('static', filename='images/like.png') }}" alt="Like" class="action-icon">
                         </button>
                     </form>
+
                     <button class="comment-btn" onclick="toggleCommentBox('{{ post.id }}')">
                         <img src="{{ url_for('static', filename='images/comment.png') }}" alt="Comment" class="action-icon">
                     </button>
@@ -79,6 +81,7 @@
                     {% endfor %}
                 </div>
             </article>
+
             {% endfor %}
         </section>
 
