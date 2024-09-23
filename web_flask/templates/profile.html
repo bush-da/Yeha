@@ -9,7 +9,7 @@
 <body>
     <header>
       <div class="logo">
-            <a href="#">Yeha</a>
+            <a href="{{ url_for('home.index') }}">Yeha</a>
       </div>
         <nav class="nav-links">
             <a href="{{ url_for('home.index') }}" class="active">Home</a>
@@ -30,11 +30,11 @@
             <img src="{{ url_for('static', filename='images/' + (user.profile_picture if user.profile_picture else 'user.png')) }}" alt="Profile Picture" class="profile-pic">
             <h2>{{ user.username }}</h2>
             <p>{{ user.bio }}</p>
-
+<!--	    <p>Followers: {{ user.followers }} Following: {{ user.following }}</p> -->
             {% if is_own_profile %}
                 <!-- Update Profile Form -->
                 <form action="{{ url_for('profile.update_profile', user_id=user.id) }}" method="POST" enctype="multipart/form-data">
-                    <input type="text" name="name" value="{{ user.username }}" placeholder="Update Name">
+                    <input type="text" name="username" value="{{ user.username }}" placeholder="Update UserName">
                     <input type="email" name="email" value="{{ user.email }}" placeholder="Update Email">
                     <textarea name="bio" placeholder="Update Bio">{{ user.bio }}</textarea>
                     <p>change profile picture</p><input type="file" name="profile_picture">
@@ -43,7 +43,7 @@
                 <a href="{{ url_for('post.new_post') }}" class="write-post-btn">Write a New Blog Post</a>
             {% else %}
                 {% if user_id not in session.get('user_id').following %}
-                    <form action="{{ url_for('profile.follow_user', user_id=user.id) }}" method="POST">
+                    <form action="{{ url_for('follow.follow_user', user_id=user.id) }}" method="POST">
                         <button type="submit">Follow</button>
                     </form>
                 {% else %}
@@ -64,7 +64,7 @@
                     <div class="post-actions">
                         {% if is_own_profile %}
                             <!-- Update and Delete buttons only for the owner's posts -->
-                            <a href="{{ url_for('post.update_post', post_id=post.id) }}" class="update-btn">Update</a>
+                            <a href="{{ url_for('post.update_post', post_id=post.id) }}" class="update-btn">Edit</a>
                             <form action="{{ url_for('post.delete_post', post_id=post.id) }}" method="POST" style="display:inline;">
                                 <button type="submit" class="delete-btn">Delete</button>
                             </form>
