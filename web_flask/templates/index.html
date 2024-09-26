@@ -32,48 +32,59 @@
     <main>
         <section class="content">
             {% for post in posts %}
-           <article class="blog-post">
+            <article class="blog-post">
                 <div class="post-header">
-		  <a href="/profile/{{ post.author_id }}">
-		  <img src="{{ url_for('static', filename='images/' + (post.author.profile_picture if post.author.profile_picture else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
-                  <div class="author-info">
-                        <h3 class="author-name">{{ post.author.username }}</h3></a>
-                        <p class="author-bio">{{ post.author.bio }}</p>
-                        {% if session.get('user_id') and session.get('user_id') != post.author.id %}
-                        <form action="{{ url_for('follow.follow_user', user_id=post.author.id) }}" method="POST">
-                            <button type="submit" class="follow-btn">Follow</button>
-                        </form>
-                        {% endif %}
-                    </div>
+                    <a href="/profile/{{ post.author_id }}">
+                        <img src="{{ url_for('static', filename='images/' + (post.author.profile_picture if post.author.profile_picture else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
+                        <div class="author-info">
+                            <h3 class="author-name">{{ post.author.username }}</h3>
+                            <p class="author-bio">{{ post.author.bio }}</p></a>
+                            {% if session.get('user_id') and session.get('user_id') != post.author.id %}
+                                {% set is_following = session.get('user_id') in follower_map[post.author.id] %}
+                                <form action="{{ url_for('follow.follow_user', user_id=post.author.id) }}" method="POST" id="follow-form-{{ post.author.id }}" class="follow-form">
+                                    <button type="submit" class="follow-btn" id="follow-btn-{{ post.author.id }}">
+                                        {% if is_following %}
+                                            Unfollow
+                                        {% else %}
+                                            Follow
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
                 </div>
                 <h2>{{ post.title }}</h2>
-
-		{% for content in post.contents %}
-		    {% if content.file_url %}
-		        <img src="{{ content.file_url }}" alt="Post image">
-		    {% else %}
-		<p>{{ content.content | truncate(100) }}<span class="dots">....</span></p>
-		    {% endif %}
-		{% endfor %}
-
+                {% for content in post.contents %}
+                    {% if content.file_url %}
+                        <img src="{{ content.file_url }}" alt="Post image">
+                    {% else %}
+                        <p>{{ content.content | truncate(100) }}<span class="dots">....</span></p>
+                    {% endif %}
+                {% endfor %}
                 <a href="{{ url_for('post.post_detail', post_id=post.id) }}" class="more-btn">More</a>
                 <div class="post-actions">
-                    <form action="{{ url_for('like.like_post', post_id=post.id) }}" method="POST">
-                        <button type="submit" class="like-btn">
-                            <img src="{{ url_for('static', filename='images/like.png') }}" alt="Like" class="action-icon">
-                        </button>
-                    </form>
+		  <button class="like-btn" id="like-btn-{{ post.id }}" onclick="likePost('{{ post.id }}')">
+		    <img src="{% if post.is_liked(session.get('user_id'), post.id ) %}{{ url_for('static', filename='images/liked.png') }}{% else %}{{ url_for('static', filename='images/like.png') }}{% endif %}" alt="Like" class="action-icon">
+		  </button>
+		  <span id="like-count-{{ post.id }}">{{ post.count_likes() }}</span>
 
+<!--                    <button class="like-btn" id="like-btn-{{ post.id }}" onclick="likePost('{{ post.id }}')">
+                        <img src="{{ url_for('static', filename='images/like.png') }}" alt="Like" class="action-icon">
+                    </button>
+		    <span id="like-count-{{ post.id }}">{{ post.count_likes() }}</span> -->
                     <button class="comment-btn" onclick="toggleCommentBox('{{ post.id }}')">
                         <img src="{{ url_for('static', filename='images/comment.png') }}" alt="Comment" class="action-icon">
+			<span>{{ post.count_comment() }}</span>
                     </button>
                     <button class="share-btn">
                         <img src="{{ url_for('static', filename='images/share.png') }}" alt="Share" class="action-icon">
                     </button>
                 </div>
                 <div class="comment-box" id="comment-box-{{ post.id }}" style="display:none;">
-                    <textarea id="comment-text-{{ post.id }}" rows="3" placeholder="Add a comment..."></textarea>
-                    <button onclick="submitComment('{{ post.id }}')">Comment</button>
+                    <form action="{{ url_for('comment.add_comment', post_id=post.id) }}" method="POST">
+                        <textarea name="comment" rows="3" placeholder="Add a comment..."></textarea>
+                        <button type="submit">Comment</button>
+                    </form>
                 </div>
                 <div class="tag">
                     {% for tag in post.tags %}
@@ -81,24 +92,80 @@
                     {% endfor %}
                 </div>
             </article>
-
             {% endfor %}
         </section>
 
         <aside class="sidebar">
             <h3>Filter by Tag</h3>
             <div class="tags">
-	      <button class="filter-btn" onclick="resetFilters()">List All</button>
+                <button class="filter-btn" onclick="resetFilters()">List All</button>
                 {% for tag in tags %}
                     <button class="filter-btn" onclick="toggleTag('{{ tag.id }}')">#{{ tag.name }}</button>
                 {% endfor %}
-
             </div>
-
         </aside>
     </main>
 
     <script>
+            document.querySelectorAll('.follow-form').forEach(function(form) {
+          form.addEventListener('submit', function(event) {
+              event.preventDefault(); // Prevent default form submission
+
+                const button = this.querySelector('.follow-btn');
+                const userId = this.action.split('/').pop(); // Extract user ID from the form action
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Toggle button text
+                        button.innerText = button.innerText === 'Follow' ? 'Unfollow' : 'Follow';
+                    } else {
+                        console.error('Failed to update follow status');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+      function likePost(postId) {
+          const likeButton = document.getElementById(`like-btn-${postId}`);
+          const likeCount = document.getElementById(`like-count-${postId}`);
+          const img = likeButton.querySelector('img'); // Get the image inside the button
+
+          fetch(`/like/post/${postId}`, {
+              method: 'POST',
+              headers: {
+                  'X-Requested-With': 'XMLHttpRequest'
+              }
+          })
+              .then(response => {
+		  if (!response.ok) {
+                      console.error('Failed to like/unlike post');
+                      return;
+		  }
+		  return response.json();  // Parse the JSON response
+              })
+              .then(data => {
+		  if (data.success) {
+                      // Update the like count
+                      likeCount.textContent = data.like_count;
+
+                      // Toggle the image source based on like status
+                      img.src = data.is_liked ? "{{ url_for('static', filename='images/liked.png') }}" : "{{ url_for('static', filename='images/like.png') }}";
+		  } else {
+                      console.error('Like action failed:', data.message);
+		  }
+              })
+              .catch(error => {
+		  console.error('Error:', error);
+              });
+      }
         const selectedTags = new Set();
 
         function toggleTag(tagId) {
@@ -112,13 +179,6 @@
             }
             filterPosts();
         }
-
-        function resetFilters() {
-            selectedTags.clear();
-            document.querySelectorAll('.filter-btn.selected').forEach(btn => btn.classList.remove('selected'));
-            window.location.href = "{{ url_for('home.index') }}";
-        }
-
         function filterPosts() {
             if (selectedTags.size > 0) {
                 const tagParams = Array.from(selectedTags).join(',');
@@ -132,10 +192,14 @@
             var commentBox = document.getElementById('comment-box-' + postId);
             commentBox.style.display = commentBox.style.display === 'none' ? 'block' : 'none';
         }
-
         function submitComment(postId) {
             var commentText = document.getElementById('comment-text-' + postId).value;
             console.log('Submitting comment:', commentText);
+        }
+        function resetFilters() {
+            selectedTags.clear();
+            document.querySelectorAll('.filter-btn.selected').forEach(btn => btn.classList.remove('selected'));
+            window.location.href = "{{ url_for('home.index') }}";
         }
     </script>
 </body>
