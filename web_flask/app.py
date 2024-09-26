@@ -6,7 +6,8 @@ from web_flask.routes.comment_routes import comment_bp
 from web_flask.routes.like_routes import like_bp
 from web_flask.routes.about import about_bp
 from web_flask.routes.home import home_bp
-from web_flask.routes.profile_routes import profile_bp  # Import the profile blueprint
+from web_flask.routes.profile_routes import profile_bp
+from web_flask.routes.follow_routes import follow_bp
 
 def create_app():
     """Create and configure the Flask application."""
@@ -21,7 +22,8 @@ def create_app():
     app.register_blueprint(post_bp)
     app.register_blueprint(comment_bp)
     app.register_blueprint(like_bp)
-    app.register_blueprint(profile_bp)  # Register the profile blueprint
+    app.register_blueprint(profile_bp)
+    app.register_blueprint(follow_bp)
 
     @app.teardown_appcontext
     def teardown(exception):
