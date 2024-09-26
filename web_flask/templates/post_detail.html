@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,9 +33,16 @@
                     <h3 class="author-name">{{ post.author.username }}</h3></a>
                     <p class="author-bio">{{ post.author.bio }}</p>
                     {% if session.get('user_id') and post.author_id != session['user_id'] %}
-                    <form action="{{ url_for('follow.follow_user', user_id=post.author_id) }}" method="POST">
-                        <button type="submit" class="follow-btn">Follow</button>
-                    </form>
+		    		    {% set is_following = session.get('user_id') in follower_map[post.author.id] %}
+                                <form action="{{ url_for('follow.follow_user', user_id=post.author.id) }}" method="POST" id="follow-form-{{ post.author.id }}" class="follow-form">
+                                    <button type="submit" class="follow-btn" id="follow-btn-{{ post.author.id }}">
+                                        {% if is_following %}
+                                            Unfollow
+                                        {% else %}
+                                            Follow
+                                        {% endif %}
+                                    </button>
+                                </form>
                     {% endif %}
                 </div>
             </div>
@@ -54,14 +62,14 @@
 		{% endfor %}
 
             <div class="post-actions">
-                <form action="{{ url_for('like.like_post', post_id=post.id) }}" method="POST">
-		  <p> likes: {{ count_likes }} </p>
-                    <button type="submit" class="like-btn">
-                        <img src="{{ url_for('static', filename='images/like.png') }}" alt="Like" class="action-icon">
-                    </button>
-                </form>
+	      <button class="like-btn" id="like-btn-{{ post.id }}" onclick="likePost('{{ post.id }}')">
+		<img src="{% if post.is_liked(session.get('user_id'), post.id) %}{{ url_for('static', filename='images/liked.png') }}{% else %}{{ url_for('static', filename='images/like.png') }}{% endif %}" alt="Like" class="action-icon">
+	      </button>
+	      <span id="like-count-{{ post.id }}">{{ post.count_likes() }}</span>
+
                 <button class="comment-btn" onclick="toggleCommentBox()">
                     <img src="{{ url_for('static', filename='images/comment.png') }}" alt="Comment" class="action-icon">
+		    <span>{{ post.count_comment() }}</span>
                 </button>
                 <button class="share-btn">
                     <img src="{{ url_for('static', filename='images/share.png') }}" alt="Share" class="action-icon">
@@ -71,6 +79,7 @@
                 <form action="{{ url_for('comment.add_comment', post_id=post.id) }}" method="POST">
                     <textarea name="comment" rows="3" placeholder="Add a comment..."></textarea>
                     <button type="submit">Comment</button>
+
                 </form>
             </div>
 
@@ -79,6 +88,11 @@
                 {% for comment in comments %}
                 <div class="comment">
                     <p><a href="/profile/{{ comment.author_id }}">{{ comment.author.username }}</a>: {{ comment.content }}</p>
+		    <form action="{{ url_for('comment.delete_comment', comment_id=comment.id) }}" method="POST">
+		      {% if (session.get('user_id') in [comment.author_id, comment.post.author_id]) %}
+		      <button class="delete-btn">Delete</button>
+		      {% endif %}
+		    </form>
                 </div>
                 {% endfor %}
             </section>
@@ -86,6 +100,65 @@
     </main>
 
     <script>
+      document.querySelectorAll('.follow-form').forEach(function(form) {
+          form.addEventListener('submit', function(event) {
+              event.preventDefault(); // Prevent default form submission
+
+                const button = this.querySelector('.follow-btn');
+                const userId = this.action.split('/').pop(); // Extract user ID from the form action
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Toggle button text
+                        button.innerText = button.innerText === 'Follow' ? 'Unfollow' : 'Follow';
+                    } else {
+                        console.error('Failed to update follow status');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+      function likePost(postId) {
+          const likeButton = document.getElementById(`like-btn-${postId}`);
+          const likeCount = document.getElementById(`like-count-${postId}`);
+          const img = likeButton.querySelector('img'); // Get the image inside the button
+
+          fetch(`/like/post/${postId}`, {
+              method: 'POST',
+              headers: {
+                  'X-Requested-With': 'XMLHttpRequest'
+              }
+          })
+              .then(response => {
+		  if (!response.ok) {
+                      console.error('Failed to like/unlike post');
+                      return;
+		  }
+		  return response.json();  // Parse the JSON response
+              })
+              .then(data => {
+		  if (data.success) {
+                      // Update the like count
+                      likeCount.textContent = data.like_count;
+
+                      // Toggle the image source based on like status
+                      img.src = data.is_liked ? "{{ url_for('static', filename='images/liked.png') }}" : "{{ url_for('static', filename='images/like.png') }}";
+		  } else {
+                      console.error('Like action failed:', data.message);
+		  }
+              })
+              .catch(error => {
+		  console.error('Error:', error);
+              });
+      }
+
         function toggleCommentBox() {
             var commentBox = document.getElementById('comment-box');
             commentBox.style.display = commentBox.style.display === 'none' ? 'block' : 'none';
