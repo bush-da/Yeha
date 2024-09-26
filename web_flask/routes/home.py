@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from models.post import Post
 from models.tag import Tag
+from models.follower import Follower
 from models import storage
 
 home_bp = Blueprint('home', __name__)
@@ -29,8 +30,12 @@ def index():
     else:
         # No tags selected, show all posts
         posts = storage.all(Post).values()
-
+    follower_map = {}
     tags = storage.all(Tag).values()  # Fetch all tags for display
     for post in posts:
         post.contents = sorted(post.contents, key=lambda c: c.paragraph)
-    return render_template('index.html', posts=posts, tags=tags)
+        followers = storage.all(Follower).values()
+        # Filter followers for the current post's author
+        follower_map[post.author.id] = [follower.follower_id for follower in followers if follower.followed_id == post.author.id]
+
+    return render_template('index.html', posts=posts, tags=tags, follower_map=follower_map)

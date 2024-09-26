@@ -24,7 +24,7 @@ def register():
 
         users = storage.all(User)
         for user in users.values():
-            if user.email == email or user.name == name:
+            if user.email == email or user.username == username:
                 flash('User already exists!')
                 return redirect(url_for('auth.register'))
 
