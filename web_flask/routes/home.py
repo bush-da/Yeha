@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, session
 from models.post import Post
 from models.tag import Tag
 from models.follower import Follower
@@ -13,6 +13,7 @@ def redirect_home():
 @home_bp.route('/home', methods=['GET'])
 def index():
     # To filter using tags
+    logged_in = 'user_id' in session
     tag_ids = request.args.get('tags')
 
     if tag_ids:
@@ -38,4 +39,4 @@ def index():
         # Filter followers for the current post's author
         follower_map[post.author.id] = [follower.follower_id for follower in followers if follower.followed_id == post.author.id]
 
-    return render_template('index.html', posts=posts, tags=tags, follower_map=follower_map)
+    return render_template('index.html', posts=posts, tags=tags, follower_map=follower_map, logged_in=logged_in)

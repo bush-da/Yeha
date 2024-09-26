@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 from models import storage
 from models.user import User
 from models.post import Post
+from models.follower import Follower
 from werkzeug.security import generate_password_hash, check_password_hash
 from uuid import UUID
 import os
@@ -22,8 +23,12 @@ def profile(user_id):
 
     # Check if the user is viewing their own profile
     is_own_profile = session.get('user_id') == user_id
+    followers = storage.all(Follower).values()
+    follower_map = {}
+    follower_map[user.id] = [follower.follower_id for follower in followers if follower.followed_id == user.id]
 
-    return render_template('profile.html', user=user, posts=user_posts, is_own_profile=is_own_profile)
+
+    return render_template('profile.html', user=user, posts=user_posts, is_own_profile=is_own_profile, follower_map=follower_map)
 
 @profile_bp.route('/<user_id>/update', methods=['POST'])
 def update_profile(user_id):

@@ -169,6 +169,7 @@ def delete_post(post_id):
 
 @post_bp.route('/posts/<post_id>', methods=['GET'])
 def post_detail(post_id):
+    logged_in = 'user_id' in session
     post = storage.all(Post).get(f"Post.{post_id}")
     follower_map = {}
     if post:
@@ -179,7 +180,7 @@ def post_detail(post_id):
         # Filter followers for the current post's author
         follower_map[post.author.id] = [follower.follower_id for follower in followers if follower.followed_id == post.author.id]
 
-        return render_template('post_detail.html', post=post, count_likes=count_likes, comments=comments, follower_map=follower_map)
+        return render_template('post_detail.html', post=post, count_likes=count_likes, comments=comments, follower_map=follower_map, logged_in=logged_in)
     else:
         flash('Post not found', 'error')
         return redirect(url_for('home.index'))
