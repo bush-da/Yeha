@@ -3,6 +3,7 @@
 from sqlalchemy import Column, String, Text, Enum, Boolean
 from sqlalchemy.orm import relationship
 from models.base_model import BaseModel, Base
+from models.follower import Follower
 
 class User(BaseModel, Base):
     """Represents a user in the Yeha application"""
@@ -22,5 +23,15 @@ class User(BaseModel, Base):
     posts = relationship("Post", back_populates="author", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="author", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="author", cascade="all, delete-orphan")
-    # following = relationship("Follower", back_populates="follower")
-    # followers = relationship("Follower", back_populates="followed")
+    following = relationship(
+        'Follower',
+        foreign_keys=[Follower.follower_id],
+        backref='follower'
+    )
+
+    # Relationship for users that follow this user
+    followers = relationship(
+        'Follower',
+        foreign_keys=[Follower.followed_id],
+        backref='followed'
+    )

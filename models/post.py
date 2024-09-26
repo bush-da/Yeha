@@ -3,6 +3,8 @@
 from sqlalchemy import Column, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from models.base_model import BaseModel, Base
+from models.like import Like
+
 from models.post_tag import post_tag
 
 class Post(BaseModel, Base):
@@ -29,22 +31,14 @@ class Post(BaseModel, Base):
         """Return the number of likes for the post."""
         return len(self.likes)
 
-    def add_like(self, user):
-        """Add a like to the post by a user."""
-        from models.like import Like
-        existing_like = next((like for like in self.likes if like.author_id == user.id), None)
-        if not existing_like:
-            like = Like(author_id=user.id, post_id=self.id)
-            models.storage.new(like)
-            models.storage.save()
-
-    def remove_like(self, user):
-        """Remove a like from the post by a user."""
-        from models.like import Like
-        like = models.storage.get(Like, (user.id, self.id))
-        if like:
-            models.storage.delete(like)
-            models.storage.save()
+    def is_liked(self, user, post):
+        from models import storage
+        likes = storage.all(Like).values()
+        for like in likes:
+            if like.post_id == post:
+                if like.author_id == user:
+                    return True
+        return False
 
     def add_tag(self, tag):
         """Add a tag to the post."""
