@@ -42,16 +42,17 @@
                 </form>
                 <a href="{{ url_for('post.new_post') }}" class="write-post-btn">Write a New Blog Post</a>
             {% else %}
-                {% if user_id not in session.get('user_id').following %}
-                    <form action="{{ url_for('follow.follow_user', user_id=user.id) }}" method="POST">
-                        <button type="submit">Follow</button>
-                    </form>
-                {% else %}
-                    <form action="{{ url_for('profile.unfollow_user', user_id=user.id) }}" method="POST">
-                        <button type="submit">Unfollow</button>
-                    </form>
-                {% endif %}
-            {% endif %}
+		{% set is_following = session.get('user_id') in follower_map[user.id] %}
+                <form action="{% if session.get('user_id') %} {{ url_for('follow.follow_user', user_id=user.id) }} {% else %} {{ url_for('auth.login') }} {% endif %}" method="POST" id="follow-form-{{ user.id }}" class="follow-form">
+                  <button type="submit" class="follow-btn" id="follow-btn-{{ user.id }}">
+                    {% if is_following %}
+                    Unfollow
+                    {% else %}
+                    Follow
+                    {% endif %}
+                  </button>
+                </form>
+		{% endif %}
         </section>
 
         <section class="user-posts">
@@ -78,5 +79,40 @@
     <footer>
         <a href="{{ url_for('home.index') }}">Back to Home</a>
     </footer>
+
+    <script>
+        document.querySelectorAll('.follow-form').forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const button = this.querySelector('.follow-btn');
+            const actionUrl = this.action;
+
+            // If the action URL points to the login page, redirect instead of using fetch
+            if (actionUrl.includes('login')) {
+                window.location.href = actionUrl;
+                return;
+            }
+
+            const formData = new FormData(this);
+
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Toggle button text
+                    button.innerText = button.innerText === 'Follow' ? 'Unfollow' : 'Follow';
+                } else {
+                    console.error('Failed to update follow status');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+</script>
 </body>
 </html>
