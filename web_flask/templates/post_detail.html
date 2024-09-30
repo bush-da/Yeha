@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,6 +31,7 @@
                 <div class="author-info">
                     <h3 class="author-name">{{ post.author.username }}</h3></a>
                     <p class="author-bio">{{ post.author.bio }}</p>
+		    {% if session.get('user_id') != post.author.id %}
 		    {% set is_following = session.get('user_id') in follower_map[post.author.id] %}
 		    <form action="{% if session.get('user_id') %} {{ url_for('follow.follow_user', user_id=post.author.id) }} {% else %} {{ url_for('auth.login') }} {% endif %}" method="POST" id="follow-form-{{ post.author.id }}" class="follow-form">
                       <button type="submit" class="follow-btn" id="follow-btn-{{ post.author.id }}">
@@ -42,6 +42,7 @@
                                         {% endif %}
                                     </button>
                                 </form>
+		    {% endif %}
                 </div>
             </div>
             <h2>{{ post.title }}</h2>

@@ -12,27 +12,27 @@ def redirect_home():
 
 @home_bp.route('/home', methods=['GET'])
 def index():
-    # To filter using tags
     logged_in = 'user_id' in session
     tag_ids = request.args.get('tags')
 
-    if tag_ids:
-        # If tag button is clicked
-        # Convert the comma-separated string into a list of tag IDs
-        tag_ids = tag_ids.split(',')
+    # Fetch all posts and tags from storage
+    posts = list(storage.all(Post).values())
+    tags = list(storage.all(Tag).values())
 
-        # Filter posts by the selected tags
-        posts = []
-        all_posts = storage.all(Post).values()
-        for post in all_posts:
-            post_tag_ids = [str(tag.id) for tag in post.tags]  # Get the tag IDs for each post
-            if any(tag_id in post_tag_ids for tag_id in tag_ids):
-                posts.append(post)
-    else:
-        # No tags selected, show all posts
-        posts = storage.all(Post).values()
+    if tag_ids:
+        # Split the comma-separated tag IDs and convert to integers for comparison
+        tag_ids = set(tag_ids.split(','))  # Using a set for efficient lookup
+
+        # Filter posts that contain any of the selected tags
+        filtered_posts = []
+        for post in posts:
+            post_tag_ids = {str(tag.id) for tag in post.tags}  # Post tag IDs as a set of strings
+            if post_tag_ids.intersection(tag_ids):  # Check if there's any match
+                filtered_posts.append(post)
+
+        posts = filtered_posts  # Update the posts list with filtered posts
+
     follower_map = {}
-    tags = storage.all(Tag).values()  # Fetch all tags for display
     for post in posts:
         post.contents = sorted(post.contents, key=lambda c: c.paragraph)
         followers = storage.all(Follower).values()

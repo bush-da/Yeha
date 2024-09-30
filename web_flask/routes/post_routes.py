@@ -16,10 +16,16 @@ post_bp = Blueprint('post', __name__)
 def list_posts():
     posts = storage.all(Post).values()
     # Fetch contents for each post
+    follower_map = {}
     for post in posts:
         post.contents = list(storage.all(Content).values())
         post.contents = [content for content in post.contents if content.post_id == post.id]
-    return render_template('index.html', posts=posts)
+
+        followers = storage.all(Follower).values()
+        # Filter followers for the current post's author
+        follower_map[post.author.id] = [follower.follower_id for follower in followers if follower.followed_id == post.author.id]
+
+    return render_template('index.html', posts=posts, follower_map=follower_map)
 
 @post_bp.route('/posts/new_post', methods=['GET', 'POST'])
 def new_post():

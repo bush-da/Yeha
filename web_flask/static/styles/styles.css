@@ -59,10 +59,10 @@ header {
 .nav-links a.sign-in:hover {
     background-color: #00a100;
 }
-
 /* Main Content */
 main {
     display: flex;
+    position: relative;
     justify-content: center; /* Center the content horizontally */
     align-items: flex-start; /* Center the content vertically */
     min-height: calc(100vh - 60px); /* Ensure main section takes at least full viewport height minus header height */
@@ -72,8 +72,8 @@ main {
 
 .content {
     width: 70%;
-    margin-right: 20px;
-    padding-left: 20px; /* Adds space to the left of the content */
+    margin-right: 200px;
+    padding-left: -100px; /* Adds space to the left of the content */
 }
 
 .blog-post {
@@ -100,7 +100,6 @@ main {
     margin-top: 10px;              /* Add space above the tags */
     margin-bottom: 10px;           /* Add space below the tags */
 }
-
 /* Individual Tag Style */
 .tag span {
     display: inline-block;         /* Keeps the span elements as inline-blocks */
@@ -194,7 +193,9 @@ main {
 
 
 .sidebar {
-    width: 30%;
+    width: 22%;
+    position: fixed;
+    left: 1010px;
 }
 
 .sidebar h3 {
@@ -203,6 +204,7 @@ main {
     border: 1px solid #ccc;
     margin-bottom: 10px;
 }
+
 
 .filter-by-tag {
     background-color: #fff;

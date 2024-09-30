@@ -1,0 +1,50 @@
+Yeha/
+├── models/
+│   ├── __init__.py               # Initializes models package
+│   ├── base_model.py             # Base model class (common attributes)
+│   ├── user.py                   # User model (e.g., username, email, password)
+│   ├── post.py                   # Post model (e.g., title, content, user_id)
+│   ├── comment.py                # Comment model (e.g., content, post_id, user_id)
+│   ├── category.py               # Category model (for categorizing posts)
+│   ├── tag.py                    # Tag model (for tagging posts)
+│   ├── post_tag.py               # Association table for posts and tags
+│   ├── like.py                   # Like model (e.g., user_id, post_id)
+│   ├── flagged.py                # Flagged model (for reporting inappropriate posts)
+│   ├── report.py                 # Report model (e.g., user_id, post_id, reason)
+│   └── follower.py               # Follower model (e.g., following_id, follower_id)
+│   └── engine/
+│       ├── __init__.py           # Initializes engine package
+│       └── db_storage.py         # Database storage engine
+├── web_flask/
+│   ├── __init__.py               # Initializes web_flask package
+│   ├── routes/
+│   │   ├── __init__.py           # Initializes routes package
+│   │   ├── auth_routes.py        # Handles authentication (login, register)
+│   │   ├── post_routes.py        # Handles posts (list, add, and show post in detail)
+│   │   ├── comment_routes.py     # Handles comments (view, add)
+│   │   ├── like_routes.py        # Handles liking undo liking
+│   │   ├── follow_routes.py      # Handles follow/unfollow
+│   │   ├── home.py               # Handles landing page if not logged in or signup
+│   │   ├── profile_routes.py     # Handles profiles users profile or own profiles
+│   │   ├── about.py              # Handles route to about.html page
+│   ├── templates/
+│   │   ├── index.html            # Home page showing list of posts if user not logged in just posts of users
+│   │   ├── post_detail.html      # Detailed view of a single post
+│   │   ├── login.html            # Login page
+│   │   ├── register.html         # Registration page
+│   │   ├── new_post.html         # Page for creating a new post
+│   │   ├── 404.html              # Page for handling 404 errors
+│   │   ├── home.html             # home page for user that logged in show profile and logout button in nav bar
+│   │   ├── about.html            # show about page
+│   ├── static/
+│   │   ├── images/               # Store images used in the app
+│   │       └── like.png          # like png to show like button
+│   │       └── comment.png       # comment png to show comment button
+│   │       └── share.png         # share png to show share button
+│   │   ├── styles/               # CSS files for styling
+│   │       └── style.css         # Example CSS file for the project
+│   ├── config.py                 # Flask configuration (e.g., SECRET_KEY, DB URI)
+│   ├── app.py 			  # Main app file, registers routes and initializes app
+├── setup_mysql_dev.sql           # MySQL setup script (creates DB, user)
+└── README.md                     # Project description and instructions
+
