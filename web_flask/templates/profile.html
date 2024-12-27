@@ -30,7 +30,14 @@
             <img src="{{ url_for('static', filename='images/' + (user.profile_picture if user.profile_picture else 'user.png')) }}" alt="Profile Picture" class="profile-pic">
             <h2>{{ user.username }}</h2>
             <p>{{ user.bio }}</p>
-<!--	    <p>Followers: {{ user.followers }} Following: {{ user.following }}</p> -->
+	    <p>
+	      <a href="{{ url_for('follow.followers_list', user_id=user.id) }}">
+		Followers: {{ follower_count }}
+	      </a> |
+	      <a href="{{ url_for('follow.following_list', user_id=user.id) }}">
+		Following: {{ following_count }}
+	      </a>
+	    </p>
             {% if is_own_profile %}
                 <!-- Update Profile Form -->
                 <form action="{{ url_for('profile.update_profile', user_id=user.id) }}" method="POST" enctype="multipart/form-data">

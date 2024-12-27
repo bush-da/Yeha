@@ -1,4 +1,4 @@
-from flask import Blueprint, session, redirect, url_for, flash, request
+from flask import Blueprint, session, redirect, url_for, flash, request, render_template
 from models import storage
 from models.user import User
 from models.follower import Follower
@@ -36,3 +36,33 @@ def follow_user(user_id):
         flash('User followed successfully.')
 
     return redirect(request.referrer)
+
+
+@follow_bp.route('/<user_id>/followers', methods=['GET'])
+def followers_list(user_id):
+    """List followers of a user."""
+    user = storage.all(User).get(f"User.{user_id}")
+    if not user:
+        flash('User not found!')
+        return redirect(url_for('home.index'))
+
+    # Get all followers
+    followers = [f for f in storage.all(Follower).values() if f.followed_id == user_id]
+    follower_users = [storage.all(User).get(f"User.{f.follower_id}") for f in followers]
+
+    return render_template('followers_list.html', user=user, followers=follower_users)
+
+
+@follow_bp.route('/<user_id>/following', methods=['GET'])
+def following_list(user_id):
+    """List users a user is following."""
+    user = storage.all(User).get(f"User.{user_id}")
+    if not user:
+        flash('User not found!')
+        return redirect(url_for('home.index'))
+
+    # Get all following
+    following = [f for f in storage.all(Follower).values() if f.follower_id == user_id]
+    following_users = [storage.all(User).get(f"User.{f.followed_id}") for f in following]
+
+    return render_template('following_list.html', user=user, following=following_users)

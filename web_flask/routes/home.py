@@ -17,7 +17,7 @@ def index():
 
     # Fetch all posts and tags from storage
     posts = list(storage.all(Post).values())
-    tags = list(storage.all(Tag).values())
+    tags = [tag for tag in storage.all(Tag).values() if tag.posts]
 
     if tag_ids:
         # Split the comma-separated tag IDs and convert to integers for comparison

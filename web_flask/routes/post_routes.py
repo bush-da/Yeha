@@ -168,7 +168,16 @@ def update_post(post_id):
 @post_bp.route('/post/<post_id>/delete', methods=['POST'])
 def delete_post(post_id):
     post = storage.all(Post).get(f"Post.{post_id}")
+    # collect tags before deleting the post
+    tags_to_check = set(post.tags)
+
     storage.delete(post)
+    storage.save()
+
+    for tag in tags_to_check:
+        if len(tag.posts) == 0:
+            storage.delete(tag)
+
     storage.save()
     return redirect(url_for('profile.profile', user_id=post.author.id))
 

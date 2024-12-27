@@ -51,3 +51,18 @@ class Post(BaseModel, Base):
         if tag in self.tags:
             self.tags.remove(tag)
             models.storage.save()
+    def delete(self):
+        """Override delete to clean up unused tags."""
+        from models import storage
+        tags_to_check = self.tags[:]  # Copy the tags associated with this post
+
+        # Delete the post
+        storage.delete(self)
+
+        # Check and delete tags that have no posts associated
+        for tag in tags_to_check:
+            if not tag.posts:  # If the tag has no more posts
+                storage.delete(tag)
+
+        storage.save()
+

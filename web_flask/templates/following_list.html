@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Following</title>
+</head>
+<body>
+    <h2>Following by {{ user.username }}</h2>
+    <ul>
+        {% for follow in following %}
+            <li>
+              <a href="{{ url_for('profile.profile', user_id=follow.id) }}">
+		<img src="{{ url_for('static', filename='images/' + (follow.profile_picture if follow.profile_picture else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
+
+                    {{ follow.username }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('profile.profile', user_id=user.id) }}">Back to Profile</a>
+</body>
+</html>

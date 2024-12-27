@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Followers</title>
+</head>
+<body>
+    <h2>Followers of {{ user.username }}</h2>
+    <ul>
+        {% for follower in followers %}
+            <li>
+              <a href="{{ url_for('profile.profile', user_id=follower.id) }}">
+		<img src="{{ url_for('static', filename='images/' + (follower.profile_picture if follower.profile_picture else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
+
+                    {{ follower.username }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('profile.profile', user_id=user.id) }}">Back to Profile</a>
+</body>
+</html>
