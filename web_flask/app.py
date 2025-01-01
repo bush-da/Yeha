@@ -8,6 +8,9 @@ from web_flask.routes.about import about_bp
 from web_flask.routes.home import home_bp
 from web_flask.routes.profile_routes import profile_bp
 from web_flask.routes.follow_routes import follow_bp
+from web_flask.routes.admin_routes import admin_bp
+from web_flask.routes.report_routes import report_bp
+
 
 def create_app():
     """Create and configure the Flask application."""
@@ -24,6 +27,8 @@ def create_app():
     app.register_blueprint(like_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(follow_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(report_bp)
 
     @app.teardown_appcontext
     def teardown(exception):

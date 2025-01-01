@@ -10,6 +10,60 @@
             background-color: #007bff;
             color: white;
         }
+	.share-container {
+            position: relative;
+            display: inline-block;
+	}
+
+	.share-popup {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.9);
+            transition: all 0.2s ease-in-out;
+	}
+
+	.share-popup.show {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+	}
+
+	.share-popup button,
+	.share-popup a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            outline: none;
+	}
+
+	.share-popup button:hover,
+	.share-popup a:hover {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+	}
+
+	.share-popup img {
+            width: 20px;
+            height: 20px;
+	}
     </style>
 </head>
 <body>
@@ -70,15 +124,48 @@
 
 <!--                    <button class="like-btn" id="like-btn-{{ post.id }}" onclick="likePost('{{ post.id }}')">
                         <img src="{{ url_for('static', filename='images/like.png') }}" alt="Like" class="action-icon">
-                    </button>
+n                    </button>
 		    <span id="like-count-{{ post.id }}">{{ post.count_likes() }}</span> -->
                     <button class="comment-btn" onclick="toggleCommentBox('{{ post.id }}')">
                         <img src="{{ url_for('static', filename='images/comment.png') }}" alt="Comment" class="action-icon">
 			<span>{{ post.count_comment() }}</span>
                     </button>
-                    <button class="share-btn">
-                        <img src="{{ url_for('static', filename='images/share.png') }}" alt="Share" class="action-icon">
-                    </button>
+                    <!-- <button class="share-btn"> -->
+                    <!--     <img src="{{ url_for('static', filename='images/share.png') }}" alt="Share" class="action-icon"> -->
+                      <!-- </button> -->
+		    <!-- <div class="share-container"> -->
+		    <!--   <button class="share-btn" onclick="toggleSharePopup('{{ post.id }}')"> -->
+		    <!-- 	<img src="{{ url_for('static', filename='images/share.png') }}" alt="Share" class="action-icon"> -->
+		    <!--   </button> -->
+		    <!--   <\!-- Share Popup -\-> -->
+		    <!--   <div class="share-popup" id="share-popup-{{ post.id }}" style="display:none;"> -->
+		    <!-- 	<button onclick="copyToClipboard('{{ request.url_root }}post/{{ post.id }}')">Copy Link</button> -->
+		    <!-- 	<a href="https://twitter.com/intent/tweet?url={{ request.url_root }}post/{{ post.id }}" target="_blank">Twitter</a> -->
+		    <!-- 	<a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url_root }}post/{{ post.id }}" target="_blank">Facebook</a> -->
+		    <!-- 	<a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url_root }}post/{{ post.id }}" target="_blank">LinkedIn</a> -->
+		    <!--   </div> -->
+		    <!-- </div> -->
+		    <div class="share-container">
+		      <button class="share-btn" onclick="toggleSharePopup('{{ post.id }}')">
+			<img src="{{ url_for('static', filename='images/share.png') }}" alt="Share" class="action-icon">
+		      </button>
+		      <!-- Enhanced Share Popup -->
+		      <div class="share-popup" id="share-popup-{{ post.id }}">
+			<button onclick="copyToClipboard('{{ request.url_root }}post/{{ post.id }}')">
+			  <img src="{{ url_for('static', filename='images/copy-link.png') }}" alt="Copy Link"> Copy Link
+			</button>
+			<a href="https://twitter.com/intent/tweet?url={{ request.url_root }}post/{{ post.id }}" target="_blank">
+			  <img src="{{ url_for('static', filename='images/twitter.png') }}" alt="Twitter"> Twitter
+			</a>
+			<a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url_root }}post/{{ post.id }}" target="_blank">
+			  <img src="{{ url_for('static', filename='images/facebook.png') }}" alt="Facebook"> Facebook
+			</a>
+			<a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url_root }}post/{{ post.id }}" target="_blank">
+			  <img src="{{ url_for('static', filename='images/linkedin.png') }}" alt="LinkedIn"> LinkedIn
+			</a>
+		      </div>
+		    </div>
+
                 </div>
                 <div class="comment-box" id="comment-box-{{ post.id }}" style="display:none;">
                     <form action="{{ url_for('comment.add_comment', post_id=post.id) }}" method="POST">
@@ -107,6 +194,59 @@
     </main>
 
     <script>
+
+      // Toggle share popup visibility
+      function toggleSharePopup(postId) {
+	  const popup = document.getElementById(`share-popup-${postId}`);
+	  const allPopups = document.querySelectorAll('.share-popup');
+
+	  // Close all other popups
+	  allPopups.forEach(p => {
+              if (p.id !== `share-popup-${postId}`) {
+		  p.classList.remove('show'); // Hide others
+              }
+	  });
+
+	  // Toggle current popup visibility
+	  popup.classList.toggle('show');
+      }
+
+      // Copy link to clipboard
+      function copyToClipboard(url) {
+	  navigator.clipboard.writeText(url).then(() => {
+              alert('Link copied to clipboard!');
+	  }).catch(err => {
+              console.error('Failed to copy: ', err);
+	  });
+      }
+
+      // Close popups when clicking outside
+      window.addEventListener('click', function (event) {
+	  const popups = document.querySelectorAll('.share-popup');
+	  const shareButtons = document.querySelectorAll('.share-btn');
+
+	  let isInsidePopup = false;
+
+	  // Check if clicked element is inside a popup or share button
+	  popups.forEach(popup => {
+              if (popup.contains(event.target)) isInsidePopup = true;
+	  });
+	  shareButtons.forEach(button => {
+              if (button.contains(event.target)) isInsidePopup = true;
+	  });
+
+	  if (!isInsidePopup) {
+              popups.forEach(popup => popup.classList.remove('show'));
+	  }
+      });
+
+
+
+
+
+
+
+      
       document.querySelectorAll('.follow-form').forEach(function(form) {
           form.addEventListener('submit', function(event) {
               event.preventDefault(); // Prevent default form submission
@@ -212,6 +352,7 @@
           var commentText = document.getElementById('comment-text-' + postId).value;
           console.log('Submitting comment:', commentText);
       }
+
     </script>
 </body>
 </html>

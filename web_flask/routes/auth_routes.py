@@ -58,7 +58,10 @@ def login():
 
         # use session management to track logged-in users
         session['user_id'] = user.id
+        session['is_admin'] = user.is_admin
         flash('Login successful!')
+        if user.is_admin:
+            return redirect(url_for('admin.admin_dashboard'))
         return redirect(url_for('home.index'))
 
     return render_template('login.html')
