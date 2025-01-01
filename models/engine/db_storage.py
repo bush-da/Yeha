@@ -10,7 +10,6 @@ from models.content import Content
 from models.like import Like
 from models.tag import Tag
 from models.report import Report
-from models.flagged import FlaggedContent
 from models.follower import Follower
 
 class DBStorage:
@@ -32,16 +31,40 @@ class DBStorage:
 
     def all(self, cls=None):
         """Query all objects of a specific class, or all objects if no class is specified."""
+        objs = []  # Initialize objs to avoid UnboundLocalError
+
         if cls is None:
-            # Query all models
-            objs = []
-            for model in [User, Post, Comment, Category, Content, Like, Tag, Report, FlaggedContent, Follower, PostTag]:
+        # Query all models
+            for model in [User, Post, Comment, Category, Content, Like, Tag, Report, Follower]:
                 objs.extend(self.__session.query(model).all())
         else:
+        # Handle both string and class types
             if isinstance(cls, str):
-                cls = self.get_model(cls)
-            objs = self.__session.query(cls).all()
-        return {"{}.{}".format(type(o).__name__, o.id): o for o in objs}
+                cls = self.get_model(cls)  # Convert string to class if necessary
+            objs = self.__session.query(cls).all()  # Query using the class object
+
+        # Process results
+        result = {}
+        for o in objs:
+            if hasattr(o, 'id'):  # Handle objects with 'id' attribute
+                result["{}.{}".format(type(o).__name__, o.id)] = o
+            elif isinstance(o, Follower):  # Handle Follower with composite keys
+                key = "{}.{}_{}".format(type(o).__name__, o.follower_id, o.followed_id)
+                result[key] = o
+
+        return result
+# def all(self, cls=None):
+    #     """Query all objects of a specific class, or all objects if no class is specified."""
+    #     if cls is None:
+    #         # Query all models
+    #         objs = []
+    #         for model in [User, Post, Comment, Category, Content, Like, Tag, Report, FlaggedContent, Follower, PostTag]:
+    #             objs.extend(self.__session.query(model).all())
+    #     else:
+    #         if isinstance(cls, str):
+    #             cls = self.get_model(cls)
+    #         objs = self.__session.query(cls).all()
+    #     return {"{}.{}".format(type(o).__name__, o.id): o for o in objs}
 
     def new(self, obj):
         """Add a new object to the session."""
@@ -78,7 +101,6 @@ class DBStorage:
             "Like": Like,
             "Tag": Tag,
             "Report": Report,
-            "FlaggedContent": FlaggedContent,
             "Follower": Follower,
             "PostTag": PostTag
         }
