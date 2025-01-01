@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/styles/styles.css">
+    <!-- Add more CSS links here -->
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+          <ul>
+
+                <li><a href="/admin/overview">Overview</a></li>
+                <li><a href="{{ url_for('admin.admin_users')}}">Users</a></li>
+                <li><a href="/admin/reports">Reports</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <header class="admin-header">
+                <h1>{% block title %}Admin Dashboard{% endblock %}</h1>
+            </header>
+
+            <section class="admin-section">
+                {% block content %}
+                <!-- Content goes here -->
+                {% endblock %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

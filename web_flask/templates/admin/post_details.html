@@ -1,0 +1,14 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Post Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ post.title }}</h1>
+    <p><strong>Author:</strong> {{ post.author.name }}</p>
+    <p><strong>Status:</strong> {{ 'Published' if post.is_published else 'Draft' }}</p>
+    <p><strong>Created:</strong> {{ post.created_at }}</p>
+    <p>{{ post.content }}</p>
+    <a href="{{ url_for('admin.admin_posts') }}" class="btn btn-secondary">Back</a>
+</div>
+{% endblock %}

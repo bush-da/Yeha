@@ -1,0 +1,55 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Admin Overview{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Admin Overview</h1>
+    <div class="row">
+        <!-- Total Users -->
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Posts -->
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Posts</h5>
+                    <p class="card-text">{{ total_posts }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Reports -->
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Reports</h5>
+                    <p class="card-text">{{ pending_reports }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Tags -->
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Popular Tags</h5>
+                    <!-- Display tags as badges -->
+                    <div class="card-text">
+                        {% for tag in popular_tags %}
+                            <span class="badge badge-primary">#{{ tag[0]}} {{ tag[1]}}<br></span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

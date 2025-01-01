@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reported Posts - Admin Dashboard</title>
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+    <header>
+        <h1>Admin Dashboard - Reported Posts</h1>
+        <nav>
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/reports">Reports</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+    <main>
+        <h2>Reported Posts</h2>
+        {% if reports %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Post Title</th>
+                        <th>Reported By</th>
+                        <th>Reason</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  {% for report in reports %}
+		  {% if not report.reviewed %}
+                        <tr>
+                            <td>{{ report.id }}</td>
+                            <td>{{ report.title }}</td>
+                            <td>{{ report.user.name }}</td>
+                            <td>{{ report.reason }}</td>
+                            <td>
+			      {% if report.id %}
+			      <a href="/posts/{{ report.post_id }}">View Post</a>
+			      {% else %}
+			      N/A
+			      {% endif %}
+
+				<form method="POST" action="/admin/report/{{ report.id }}/action">
+				  <input type="hidden" name="_method" value="ignore">
+				  <button type="submit">Mark as Resolved</button>
+				</form>
+				<form method="POST" action="/admin/report/{{ report.id }}/action">
+				  <input type="hidden" name="action" value="delete">
+				  <button type="submit">Delete Post</button>
+				</form>
+                            </td>
+                        </tr>
+			{% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No reports found.</p>
+        {% endif %}
+    </main>
+</body>
+</html>
