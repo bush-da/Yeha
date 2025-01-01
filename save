@@ -1,0 +1,1 @@
+DROP TABLE categories, comments, contents, followers, likes, post_tags, posts, reports, tags, users;
