@@ -16,6 +16,8 @@ class Post(BaseModel, Base):
     category_id = Column(String(60), ForeignKey('categories.id'), nullable=True)
 
     # Relationships
+    reports = relationship('Report', back_populates='post', cascade="all, delete")
+
     category = relationship('Category', back_populates='posts')
     contents = relationship("Content", back_populates="post", cascade="all, delete-orphan")
     author = relationship("User", back_populates="posts")

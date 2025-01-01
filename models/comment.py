@@ -13,5 +13,7 @@ class Comment(BaseModel, Base):
     post_id = Column(String(60), ForeignKey('posts.id'), nullable=False)
 
     # Relationships
+    reports = relationship('Report', back_populates='comment', cascade="all, delete")
+
     author = relationship("User", back_populates="comments")
     post = relationship("Post", back_populates="comments")

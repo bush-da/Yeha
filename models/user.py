@@ -26,6 +26,7 @@ class User(BaseModel, Base):
     following = relationship(
         'Follower',
         foreign_keys=[Follower.follower_id],
+        cascade='all, delete-orphan',
         backref='follower'
     )
 
@@ -33,5 +34,6 @@ class User(BaseModel, Base):
     followers = relationship(
         'Follower',
         foreign_keys=[Follower.followed_id],
+        cascade='all, delete-orphan',
         backref='followed'
     )
