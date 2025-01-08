@@ -15,8 +15,6 @@ class User(BaseModel, Base):
     profile_picture = Column(String(255), nullable=True)
     gender = Column(Enum('male', 'female', 'other'))
     bio = Column(Text, nullable=True)
-    location = Column(String(100), nullable=True)
-    website = Column(String(100), nullable=True)
     is_admin = Column(Boolean, default=False)
 
     # Relationships
