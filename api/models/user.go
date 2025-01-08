@@ -17,11 +17,17 @@ type User struct {
 	IsAdmin        bool      `gorm:"default:false"`
 
 	// Relationships
-	Posts     []Post     `gorm:"foreignKey:AuthorID"`
-	Comments  []Comment  `gorm:"foreignKey:AuthorID"`
-	Likes     []Like     `gorm:"foreignKey:AuthorID"`
-	Following []Follower `gorm:"foreignKey:FollowerID"`
-	Followers []Follower `gorm:"foreignKey:FollowedID"`
+	// Posts     []Post     `gorm:"foreignKey:AuthorID"`
+	// Comments  []Comment  `gorm:"foreignKey:AuthorID"`
+	// Likes     []Like     `gorm:"foreignKey:AuthorID"`
+	// Following []Follower `gorm:"foreignKey:FollowerID"`
+	// Followers []Follower `gorm:"foreignKey:FollowedID"`
+	// User Model Relationships
+	Posts     []Post     `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE" json:"posts"`
+	Comments  []Comment  `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE" json:"comments"`
+	Likes     []Like     `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE" json:"likes"`
+	Following []Follower `gorm:"foreignKey:FollowerID;constraint:OnDelete:CASCADE" json:"following"`
+	Followers []Follower `gorm:"foreignKey:FollowedID;constraint:OnDelete:CASCADE" json:"followers"`
 }
 
 // TableName overrides the table name
