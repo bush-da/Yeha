@@ -223,6 +223,26 @@ func (uc *UserController) UpdateUserProfile(c *gin.Context) {
 }
 
 // DeleteUser - Delete user by ID
+// func (uc *UserController) DeleteUser(c *gin.Context) {
+// 	id := c.Param("id")
+
+// 	// Parse UUID
+// 	userID, err := uuid.Parse(id)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+// 		return
+// 	}
+
+// 	// Delete user
+// 	if err := uc.DB.Delete(&models.User{}, "id = ?", userID).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+// 		return
+// 	}
+
+//		c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+//	}
+//
+// DeleteUser - Delete user by ID (Self-deletion allowed, Admin can delete any user)
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -230,6 +250,26 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Get the user ID from the JWT token (authentication)
+	authUserID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Check if the authenticated user is the same as the user to be deleted or an admin
+	var authUser models.User
+	if err := uc.DB.First(&authUser, "id = ?", authUserID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Check if the user is trying to delete their own account or if the user is an admin
+	if authUserID != userID.String() && !authUser.IsAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this user"})
 		return
 	}
 
