@@ -41,6 +41,11 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 	comment.AuthorID = userID.(uuid.UUID) // Updated field name
 	comment.PostID = postUUID
 
+	if len(comment.Content) == 0 || len(comment.Content) > 500 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Comment must be between 1 and 500 characters"})
+		return
+	}
+
 	// Save the comment
 	if err := cc.DB.Create(&comment).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create comment"})
@@ -52,9 +57,12 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 
 // Get all comments for a post
 func (cc *CommentController) GetComments(c *gin.Context) {
+
 	postID := c.Param("post_id") // Extract post ID from URL parameter
 
 	var comments []models.Comment
+	cc.DB.Preload("Author").Where("post_id = ?", postID).Find(&comments)
+
 	if err := cc.DB.Where("post_id = ?", postID).Find(&comments).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Comments not found"})
 		return
@@ -65,6 +73,8 @@ func (cc *CommentController) GetComments(c *gin.Context) {
 
 // Delete a comment
 func (cc *CommentController) DeleteComment(c *gin.Context) {
+	isAdmin, _ := c.Get("isAdmin")
+
 	commentID := c.Param("comment_id") // Extract comment ID from URL parameter
 	var comment models.Comment
 
@@ -81,8 +91,8 @@ func (cc *CommentController) DeleteComment(c *gin.Context) {
 		return
 	}
 
-	if comment.AuthorID != userID.(uuid.UUID) { // Updated field name
-		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this comment"})
+	if comment.AuthorID != userID.(uuid.UUID) && !isAdmin.(bool) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to delete this comment"})
 		return
 	}
 
