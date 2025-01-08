@@ -243,8 +243,11 @@ func (pc *PostController) DeletePost(c *gin.Context) {
 		return
 	}
 
+	isAdmin, _ := c.Get("isAdmin") // Check if the user is an admin
 	authorUUID, _ := uuid.Parse(post.AuthorID.String())
-	if authorUUID != userID.(uuid.UUID) {
+
+	// Allow deletion if the user is the author or an admin
+	if authorUUID != userID.(uuid.UUID) && !isAdmin.(bool) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this post"})
 		return
 	}
