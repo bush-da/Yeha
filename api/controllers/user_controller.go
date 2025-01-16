@@ -49,6 +49,34 @@ func NewUserController(db *gorm.DB) *UserController {
 	return &UserController{DB: db}
 }
 
+// GetAllUsers retrieves all users
+func (uc *UserController) GetAllUsers(c *gin.Context) {
+	var users []models.User
+
+	// Query to fetch all users
+	if err := uc.DB.Find(&users).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
+
+	// Exclude sensitive fields (like passwords) before sending the response
+	response := []map[string]interface{}{}
+	for _, user := range users {
+		response = append(response, map[string]interface{}{
+			"id":             user.ID,
+			"username":       user.Username,
+			"email":          user.Email,
+			"profilePicture": user.ProfilePicture,
+			"bio":            user.Bio,
+			"isAdmin":        user.IsAdmin,
+			"createdAt":      user.CreatedAt,
+			"updatedAt":      user.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // RegisterUser - Handles user registration
 func (uc *UserController) RegisterUser(c *gin.Context) {
 	// Input validation structure
@@ -94,8 +122,12 @@ func (uc *UserController) RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
-
-	// Return success response
+	token, err := generateToken(user.ID, user.IsAdmin) // Include admin status in token
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+	// Return success response with token
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User registered successfully",
 		"user": gin.H{
@@ -103,6 +135,7 @@ func (uc *UserController) RegisterUser(c *gin.Context) {
 			"username": user.Username,
 			"email":    user.Email,
 		},
+		"token": token, // Include token in response
 	})
 }
 
@@ -196,10 +229,10 @@ func (uc *UserController) UpdateUserProfile(c *gin.Context) {
 
 	// Input for update
 	var input struct {
-		Username       string `json:"username"`
-		ProfilePicture string `json:"profile_picture"`
-		Bio            string `json:"bio"`
-		Gender         string `json:"gender"`
+		Username       *string `json:"username"`
+		ProfilePicture *string `json:"profile_picture"`
+		Bio            *string `json:"bio"`
+		Gender         *string `json:"gender"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -207,13 +240,21 @@ func (uc *UserController) UpdateUserProfile(c *gin.Context) {
 		return
 	}
 
-	// Update user
-	user.Username = input.Username
-	user.ProfilePicture = input.ProfilePicture
-	user.Bio = input.Bio
-	user.Gender = input.Gender
-	// user.UpdatedAt = time.Now()
+	// Update only the fields that are provided
+	if input.Username != nil {
+		user.Username = *input.Username
+	}
+	if input.ProfilePicture != nil {
+		user.ProfilePicture = *input.ProfilePicture
+	}
+	if input.Bio != nil {
+		user.Bio = *input.Bio
+	}
+	if input.Gender != nil {
+		user.Gender = *input.Gender
+	}
 
+	// Save user
 	if err := uc.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
@@ -222,26 +263,49 @@ func (uc *UserController) UpdateUserProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully", "user": user})
 }
 
-// DeleteUser - Delete user by ID
-// func (uc *UserController) DeleteUser(c *gin.Context) {
-// 	id := c.Param("id")
+func (uc *UserController) UpdatePassword(c *gin.Context) {
+	id := c.Param("id")
 
-// 	// Parse UUID
-// 	userID, err := uuid.Parse(id)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-// 		return
-// 	}
+	// Parse input
+	var input struct {
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-// 	// Delete user
-// 	if err := uc.DB.Delete(&models.User{}, "id = ?", userID).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
-// 		return
-// 	}
+	// Find user
+	var user models.User
+	if err := uc.DB.First(&user, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
 
-//		c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
-//	}
-//
+	// Verify old password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.OldPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect old password"})
+		return
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash new password"})
+		return
+	}
+
+	// Update user password
+	user.Password = string(hashedPassword)
+	if err := uc.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
 // DeleteUser - Delete user by ID (Self-deletion allowed, Admin can delete any user)
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
@@ -268,7 +332,7 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 	}
 
 	// Check if the user is trying to delete their own account or if the user is an admin
-	if authUserID != userID.String() && !authUser.IsAdmin {
+	if authUserID != userID && !authUser.IsAdmin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this user"})
 		return
 	}
