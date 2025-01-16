@@ -1,44 +1,61 @@
-from flask import Blueprint, session, redirect, url_for, flash, request
-from models import storage
-from models.like import Like
-from models.post import Post
+from flask import Blueprint, session, request, jsonify
+import requests
 
 like_bp = Blueprint('like', __name__, url_prefix='/like')
+
+API_BASE_URL = "http://127.0.0.1:8080/api/posts"
+
 @like_bp.route('/post/<post_id>', methods=['POST'])
 def like_post(post_id):
     user_id = session.get('user_id')
     if not user_id:
         return {'success': False, 'message': 'Please log in to like posts.'}, 401
 
-    # Check if the post exists
-    post = storage.all(Post).get(f'Post.{post_id}')
-    if not post:
-        return {'success': False, 'message': 'Post not found.'}, 404
+    # API endpoints
+    like_api_url = f"{API_BASE_URL}/{post_id}/like"
+    check_api_url = f"{API_BASE_URL}/{post_id}/like/{user_id}"
+    likes_url = f"{API_BASE_URL}/{post_id}/likes"
+    token = session.get('jwt_token')
 
-    # Query to check if the user already liked the post
-    all_likes = storage.all(Like).values()
-    existing_like = None
+    headers = {'Authorization': f'Bearer {token}'}
+    likes = requests.get(likes_url, headers=headers).json().get('likes')
 
-    for like in all_likes:
-        if like.author_id == user_id and like.post_id == post_id:
-            existing_like = like
-            break
+    # Step 1: Check if the user already liked the post
+    check_response = requests.get(check_api_url, headers=headers)
 
-    if existing_like:
-        # User has already liked, so we remove the like
-        storage.delete(existing_like)
-        storage.save()
-        liked = False
+    if check_response.status_code == 200:
+        data = check_response.json()
+        if data.get('liked'):  # User has already liked the post
+            # Step 2: Unlike the post
+            for like in likes:
+                if like.get('author_id') == user_id:
+                    like_id = like.get('id')
+                    break
+            unlike_response = requests.delete(f"{like_api_url}/{like_id}", headers=headers)
+            if unlike_response.status_code == 200:
+                likes = requests.get(likes_url, headers=headers).json().get('likes')
+                like_count = len(likes)
+
+                return {
+                    'success': True,
+                    'like_count': like_count,
+                    'is_liked': False
+                }, 200
+            else:
+                return {'success': False, 'message': 'Failed to unlike the post.'}, unlike_response.status_code
+        else:
+            # Step 3: Like the post
+            like_response = requests.post(like_api_url, headers=headers)
+            if like_response.status_code == 200:
+                likes = requests.get(likes_url, headers=headers).json().get('likes')
+                like_count = len(likes)
+
+                return {
+                    'success': True,
+                    'like_count': like_count,
+                    'is_liked': True
+                }, 200
+            else:
+                return {'success': False, 'message': 'Failed to like the post.'}, like_response.status_code
     else:
-        # User has not liked yet, so we add a new like
-        new_like = Like(author_id=user_id, post_id=post_id)
-        storage.new(new_like)
-        storage.save()
-        liked = True
-
-    response_data = {
-        'success': True,
-        'like_count': post.count_likes(),
-        'is_liked': liked
-    }
-    return response_data, 200  # Return the JSON response
+        return {'success': False, 'message': 'Failed to fetch like status.'}, check_response.status_code

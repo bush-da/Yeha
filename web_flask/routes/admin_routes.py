@@ -1,25 +1,25 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session
-from models import storage
-from models.user import User
-from models.post import Post
-from models.comment import Comment
-from models.tag import Tag
-from models.report import Report
 from functools import wraps
+import requests
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+API_BASE_URL = 'http://localhost:8080/api'
 
 def admin_required(f):
     """Decorator to enforce admin-only access."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        token = session.get('jwt_token')
+        headers = {'Authorization': f'Bearer {token}'}
+
         user_id = session.get('user_id')  # Retrieve logged-in user ID from session
         if not user_id:  # No user logged in
             flash('Please log in to access this page.', 'warning')
             return redirect(url_for('auth.login', next=request.url))
 
-        user = storage.all(User).get(f"User.{user_id}")
-        if not user or not user.is_admin:  # User doesn't exist or isn't an admin
+        user = requests.get(f"{API_BASE_URL}/users/{user_id}", headers=headers).json().get('user')
+        if not user or not user.get('IsAdmin'):  # User doesn't exist or isn't an admin
             flash('You are not authorized to access this page.', 'danger')
             return redirect(url_for('home.index'))  # Redirect to home or login page
 
@@ -32,12 +32,25 @@ def admin_required(f):
 @admin_required
 def admin_dashboard():
     """Admin Dashboard Overview Page."""
-    total_users = len(storage.all(User))
-    total_posts = len(storage.all(Post))
-    pending_reports = len([report for report in storage.all(Report).values() if not report.reviewed])
+    token = session.get('jwt_token')
+    headers = {'Authorization': f'Bearer {token}'}
+
+    user_response = requests.get(f'{API_BASE_URL}/users', headers=headers)
+    users = user_response.json()
+    total_users = len(users)
+
+    post_response = requests.get(f'{API_BASE_URL}/posts', headers=headers)
+    posts = post_response.json()
+    total_posts = len(posts)
+
+    report_response = requests.get(f'{API_BASE_URL}/report/reports', headers=headers)
+    pending_reports = len([report for report in report_response.json() if not report.get('reviewed')])
     # Calculate tag popularity
-    tags = storage.all(Tag).values()
-    tag_counts = [(tag.name, len(tag.posts)) for tag in tags if len(tag.posts) > 0]  # Count posts per tag
+    tags_response = requests.get(f'{API_BASE_URL}/posts/tags', headers=headers)
+
+    tags = tags_response.json()
+
+    tag_counts = [(tag.get('name'), tag.get('post_count')) for tag in tags.get('tags') if tag.get('post_count') > 0]  # Count posts per tag
     popular_tags = sorted(tag_counts, key=lambda x: x[1], reverse=True)[:5]  # Sort by count (descending)
 
     return render_template('admin/overview.html',
@@ -50,16 +63,25 @@ def admin_dashboard():
 @admin_bp.route('/users', methods=['GET'])
 @admin_required
 def admin_users():
-    users = storage.all(User).values()
-    return render_template('admin/users.html', users=users)
+    token = session.get('jwt_token')
+    headers = {'Authorization': f'Bearer {token}'}
 
+    user_response = requests.get(f'{API_BASE_URL}/users', headers=headers)
+    users = user_response.json()
+
+    return render_template('admin/users.html', users=users)
 
 
 
 @admin_bp.route('/user/<user_id>', methods=['GET'])
 @admin_required
 def user_details(user_id):
-    user = storage.all(User).get(f"User.{user_id}")
+    token = session.get('jwt_token')
+    headers = {'Authorization': f'Bearer {token}'}
+
+    user_response = requests.get(f'{API_BASE_URL}/users/{user_id}', headers=headers)
+    user = user_response.json().get('user')
+
     if not user:
         flash('User not found', 'error')
         return redirect(url_for('admin.admin_users'))
@@ -71,21 +93,31 @@ def user_details(user_id):
 @admin_required
 def edit_user(user_id):
     """Edit user details, including role."""
-    user = storage.all(User).get(f"User.{user_id}")
+    token = session.get('jwt_token')
+    headers = {'Authorization': f'Bearer {token}'}
+
+    user_response = requests.get(f'{API_BASE_URL}/users/{user_id}', headers=headers)
+    user = user_response.json().get('user')
+
     if not user:
         flash('User not found', 'error')
         return redirect(url_for('admin.admin_users'))
 
     if request.method == 'POST':
         # Update basic fields
-        user.username = request.form['name']
-        user.email = request.form['email']
+        role = request.form.get('role')
+        is_admin = True if role == 'admin' else False  # Update based on role selection
+        url = f"{API_BASE_URL}/users/{user_id}"
 
-        # Update role
-        role = request.form['role']
-        user.is_admin = True if role == 'admin' else False  # Update based on role selection
 
-        storage.save()
+        payload = {
+        "username": request.form.get('name'),
+        "email": request.form.get('email'),
+        "is_admin": is_admin,
+        }
+
+        response = requests.put(url, json=payload, headers=headers)
+
         flash('User updated successfully', 'success')
         return redirect(url_for('admin.admin_users'))
 
@@ -95,118 +127,101 @@ def edit_user(user_id):
 @admin_bp.route('/user/<user_id>/delete', methods=['POST'])
 @admin_required
 def delete_user(user_id):
-    user = storage.all(User).get(f"User.{user_id}")
+    token = session.get('jwt_token')
+    headers = {'Authorization': f'Bearer {token}'}
+
+    user_response = requests.get(f'{API_BASE_URL}/users/{user_id}', headers=headers)
+    user = user_response.json().get('user')
     if not user:
         flash('User not found', 'error')
     else:
-        storage.delete(user)
-        storage.save()
-        flash('User deleted successfully', 'success')
+        user_id = user.get('ID')
+        response = requests.delete(f"{API_BASE_URL}/users/{user_id}", headers=headers)
+        if response.status_code == 200:
+            return jsonify({'success': 'user deleted successfully'})
+        else:
+            return jsonify({'error': 'Failed to delete user'}), response.status_code
     return redirect(url_for('admin.admin_users'))
-
-@admin_bp.route('/post/<post_id>/edit', methods=['GET', 'POST'])
-@admin_required
-def edit_post(post_id):
-    post = storage.all(Post).get(f"Post.{post_id}")
-    if not post:
-        flash('Post not found', 'error')
-        return redirect(url_for('admin.admin_posts'))
-
-    if request.method == 'POST':
-        post.title = request.form['title']
-        post.content = request.form['content']
-        post.is_published = bool(int(request.form['is_published']))
-        storage.save()
-        flash('Post updated successfully', 'success')
-        return redirect(url_for('admin.admin_posts'))
-
-    return render_template('admin/edit_post.html', post=post)
-
-
-
-@admin_bp.route('/post/<post_id>/delete', methods=['POST'])
-@admin_required
-def delete_post(post_id):
-    post = storage.all(Post).get(f"Post.{post_id}")
-    if not post:
-        flash('Post not found', 'error')
-    else:
-        storage.delete(post)
-        storage.save()
-        flash('Post deleted successfully', 'success')
-    return redirect(url_for('admin.admin_posts'))
-
-
-
-
 
 
 @admin_bp.route('/reports', methods=['GET'])
 @admin_required
 def admin_reports():
     """Fetch all reported posts and comments for review."""
-    reports = storage.all(Report)
+    token = session.get('jwt_token')
+    headers = {'Authorization': f'Bearer {token}'}
+
+    # Make an API call to get all reports
+    response = requests.get(f'{API_BASE_URL}/report/reports')
+    if response.status_code != 200:
+        return render_template('admin/reports.html', error="Failed to fetch reports.")
+
+    reports_data = response.json()
     results = []
 
-    for report in reports.values():
-        # Determine if the report targets a post or a comment
-        target_type = 'post' if report.post_id else 'comment'
-        target_id = report.post_id or report.comment_id
+    for report in reports_data:
 
-        # Fetch the target and reporter data
-        if target_type == 'post':
-            target = storage.all(Post).get(f"Post.{target_id}")
-        else:
-            target = storage.all(Comment).get(f"Comment.{target_id}")
-
-        reporter = storage.all(User).get(f"User.{report.user_id}")
+        # Extract target data from the report
+        target_type = 'post' if report['post_id'] else 'comment'
+        target = report['post'] if target_type == 'post' else None  # Using post data directly from the report
 
 
+        # Fetch the reporter data
+        user_id = report['user_id']
+        user_response = requests.get(f'{API_BASE_URL}/users/{user_id}', headers=headers)
 
+        if user_response.status_code != 200:
+            continue  # Skip this report if the user cannot be fetched
+        reporter = user_response.json().get('user')
+
+        # Prepare the report data for the template
         results.append({
-            'post_id': target_id,
-            'id': report.id,
-            'title': target.title if target_type == 'post' else target.content[:30] + '...',
+            'post_id': report['post_id'],
+            'id': report['id'],
+            'title': target['title'] if target else 'N/A',  # For posts
             'user': {
-                'name': reporter.username
+                'name': reporter['Username']
             },
             'post': {
-                'id': target.id if target_type == 'post' else None
+                'id': target['id'] if target else None
             },
-            'reason': report.reason,
-            'reviewed': report.reviewed
+            'reason': report['reason'],
+            'reviewed': report['reviewed']
         })
 
     return render_template('admin/reports.html', reports=results)
-
-
 
 @admin_bp.route('/report/<report_id>/action', methods=['POST'])
 @admin_required
 def review_flag(report_id):
     """Review flagged content."""
+    token = session.get('jwt_token')
+    headers = {'Authorization': f'Bearer {token}'}
+
     action = request.form.get('action') or request.form.get('_method')
 
     # Validate action
     if action not in ['delete', 'ignore']:
         return jsonify({'error': 'Invalid action'}), 400
 
-    # Retrieve flagged content
-    report = storage.all(Report).get(f"Report.{report_id}")
-    if not report:
-        return jsonify({'error': 'Reported content not found'}), 404
-
-    # Perform actions
-    if action == 'delete' and report.post_id:
-        post = storage.all(Post).get(f"Post.{report.post_id}")
-        if post:
-            storage.delete(post)
-            storage.save()
-            report.action_taken = 'deleted'
+    # Check if the report exists via the API
+    report_response = requests.get(f'{API_BASE_URL}/report/reports/', headers=headers)
+    if report_response.status_code == 200:
+        reports = [report for report in report_response.json()]
+        report = next((r for r in reports if r['id'] == report_id), None)
+        if not report:
+            return jsonify({'error': 'Reported content not found'}), 404
     else:
-        report.action_taken = 'ignored'
+        return jsonify({'error': 'Failed to fetch reports'}), report_response.status_code
 
-    report.reviewed = True
-    storage.save()
+    # Send action to the API
+    action_response = requests.post(
+        f'{API_BASE_URL}/report/reports/{report_id}/action',
+        json={'action': action},
+        headers=headers
+    )
 
-    return jsonify({'success': 'Action updated successfully'})
+    if action_response.status_code == 200:
+        return jsonify({'success': 'Action updated successfully'})
+    else:
+        return jsonify({'error': 'Failed to update action'}), action_response.status_code
