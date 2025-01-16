@@ -4,21 +4,25 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"time"
 )
 
-// Report represents a report for flagging inappropriate posts or comments
 type Report struct {
-	ID          uuid.UUID  `gorm:"type:char(36);primaryKey"`
-	UserID      uuid.UUID  `gorm:"type:char(36);not null"`
-	PostID      *uuid.UUID `gorm:"type:char(36);index;uniqueIndex:unique_report"`
-	CommentID   *uuid.UUID `gorm:"type:char(36);index;uniqueIndex:unique_report"`
-	Reason      string     `gorm:"type:varchar(64);not null"`
-	Reviewed    bool       `gorm:"default:false"`
-	ActionTaken string     `gorm:"type:varchar(64);default:''"`
+	ID        uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
+	CreatedAt time.Time `gorm:"type:datetime;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt time.Time `gorm:"type:datetime;default:CURRENT_TIMESTAMP;autoUpdateTime" json:"updated_at"`
+
+	UserID      uuid.UUID  `gorm:"type:char(36);not null" json:"user_id"`                             // Reporter ID
+	AuthorID    uuid.UUID  `gorm:"type:char(36);not null" json:"author_id"`                           // Author of the reported post or comment
+	PostID      *uuid.UUID `gorm:"type:char(36);index;constraint:OnDelete:SET NULL" json:"post_id"`   // Nullable post ID
+	CommentID   *uuid.UUID `gorm:"type:char(36);index;constraint:OnDelete:CASCADE" json:"comment_id"` // Nullable comment ID
+	Reason      string     `gorm:"type:varchar(64);not null" json:"reason"`                           // Report reason
+	Reviewed    bool       `gorm:"default:false" json:"reviewed"`
+	ActionTaken string     `gorm:"type:varchar(64);default:''" json:"action_taken"`
 
 	// Relationships
-	Post    *Post    `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE"`
-	Comment *Comment `gorm:"foreignKey:CommentID;constraint:OnDelete:CASCADE"`
+	Post    *Post    `gorm:"foreignKey:PostID" json:"post"`
+	Comment *Comment `gorm:"foreignKey:CommentID" json:"comment"`
 }
 
 // TableName overrides the table name
@@ -26,6 +30,7 @@ func (Report) TableName() string {
 	return "reports"
 }
 
+// BeforeCreate hook to validate Report fields and generate UUIDs before saving to DB
 func (report *Report) BeforeCreate(tx *gorm.DB) (err error) {
 	// Generate UUID if not set
 	if report.ID == uuid.Nil {
