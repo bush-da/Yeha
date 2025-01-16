@@ -216,6 +216,9 @@ def post_detail(post_id):
         followers_response = requests.get(f"{API_BASE_URL}/follow/users/{author_id}/followers")
         followers = followers_response.json().get('followers', [])
 
+
+        if followers is None:
+            followers = []
         # Iterate through the list of followers and extract 'follower_id'
         for follower in followers:
             follower_map.append(follower.get('follower_id'))
