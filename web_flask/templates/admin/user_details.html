@@ -7,11 +7,15 @@
     <h1>User Details</h1>
     <div class="card">
         <div class="card-body">
-          <h5 class="card-title">Name: {{ user.name }}</h5>
-            <p class="card-text">Email: {{ user.email }}</p>
-            <p class="card-text">Role: {{ user.role }}</p>
+          <h5 class="card-title">Name: {{ user.Username }}</h5>
+          <p class="card-text">Email: {{ user.Email }}</p>
+	  {% if user.IsAdmin %}
+          <p class="card-text">Role: Admin</p>
+	  {% else %}
+	  <p class="card-text">Role: Regular</p>
+	  {% endif %}
           <p class="card-text">Joined: {{ user.created_at }}</p>
-	  <a href="/profile/{{ user.id }}">visit profile</a><br>
+	  <a href="/profile/{{ user.ID }}">visit profile</a><br>
 
             <a href="{{ url_for('admin.admin_users') }}" class="btn btn-secondary">Back</a>
         </div>
