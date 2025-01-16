@@ -1,0 +1,483 @@
+{
+	"info": {
+		"_postman_id": "771a7a56-6851-408c-8e4f-99ffde37d7b7",
+		"name": "Post API Test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39343531"
+	},
+	"item": [
+		{
+			"name": "login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response contains a token\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"token\");",
+							"",
+							"    // Save token to a collection variable",
+							"    pm.collectionVariables.set(\"authToken\", jsonData.token);",
+							"    pm.collectionVariables.set(\"userId\", jsonData.user.id);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"newpassword456\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/users/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create a Post",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response contains post ID\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"id\");",
+							"    pm.expect(jsonData.id).to.exist;",
+							"",
+							"    pm.collectionVariables.set(\"postId\", jsonData.id);",
+							"});",
+							"",
+							"pm.test(\"Post content and tags are correctly added\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"contents\");",
+							"    pm.expect(jsonData.contents.length).to.be.greaterThan(0);",
+							"    pm.expect(jsonData).to.have.property(\"tags\");",
+							"    pm.expect(jsonData.tags.length).to.be.greaterThan(0);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"My First Post\",\n  \"contents\": [\n    {\n      \"content\": \"This is the first paragraph of my post.\",\n      \"paragraph\": 0\n    }\n  ],\n  \"tags\": [\n    { \"name\": \"Tech\" },\n    { \"name\": \"Web Development\" }\n  ]\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/posts/posts/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"posts",
+						"posts",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch a post",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response contains post ID\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.post).to.have.property(\"id\");",
+							"    pm.expect(jsonData.post.id).to.exist;",
+							"});",
+							"",
+							"pm.test(\"Post title is correct\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.post.title).to.equal(\"My First Post\");",
+							"});",
+							"",
+							"pm.test(\"Post contents are correctly fetched\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.post.contents.length).to.be.greaterThan(0);",
+							"    pm.expect(jsonData.post.contents[0].content).to.equal(\"This is the first paragraph of my post.\");",
+							"    pm.expect(jsonData.post.contents[0].paragraph).to.equal(0);",
+							"});",
+							"",
+							"pm.test(\"Tags are correctly fetched\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.post.tags.length).to.equal(2);",
+							"    pm.expect(jsonData.post.tags[0].name).to.equal(\"Tech\");",
+							"    pm.expect(jsonData.post.tags[1].name).to.equal(\"Web Development\");",
+							"});",
+							"",
+							"pm.test(\"Post author is correctly associated\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.post.author).to.have.property(\"ID\");",
+							"    pm.expect(jsonData.post.author.Username).to.exist;",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/posts/posts/{{postId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"posts",
+						"posts",
+						"{{postId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update a Post",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response contains post ID\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"id\");",
+							"    pm.expect(jsonData.id).to.exist;",
+							"});",
+							"",
+							"pm.test(\"Post title is correct\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.title).to.equal(\"Updated Post Title\");",
+							"});",
+							"",
+							"pm.test(\"Post contents are correctly fetched\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.contents.length).to.be.greaterThan(0);",
+							"    pm.expect(jsonData.contents[0].content).to.equal(\"This is the new second paragraph.\");",
+							"    pm.expect(jsonData.contents[0].paragraph).to.equal(1);  // Adjusted to 0 if that is the intended paragraph number.",
+							"});",
+							"",
+							"pm.test(\"Tags are correctly fetched\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.tags.length).to.equal(2);",
+							"    pm.expect(jsonData.tags[0].name).to.equal(\"Tech\");",
+							"    pm.expect(jsonData.tags[1].name).to.equal(\"Go Programming\");",
+							"});",
+							"",
+							"pm.test(\"Post author is correctly associated\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.author).to.have.property(\"ID\");",
+							"    pm.expect(jsonData.author.Username).to.exist;",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"Updated Post Title\",\n  \"contents\": [\n    {\n      \"content\": \"This is the updated first paragraph.\",\n      \"paragraph\": 0\n    },\n    {\n      \"content\": \"This is the new second paragraph.\",\n      \"paragraph\": 1\n    }\n  ],\n  \"tags\": [\n    { \"name\": \"Tech\" },\n    { \"name\": \"Go Programming\" }\n  ]\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/posts/posts/{{postId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"posts",
+						"posts",
+						"{{postId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch all posts",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is an array of posts\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an(\"array\");",
+							"});",
+							"",
+							"pm.test(\"Each post contains essential fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.length).to.be.greaterThan(0);",
+							"",
+							"    jsonData.forEach(post => {",
+							"        pm.expect(post).to.have.property(\"id\");",
+							"        pm.expect(post).to.have.property(\"title\");",
+							"        pm.expect(post).to.have.property(\"contents\");",
+							"        pm.expect(post).to.have.property(\"tags\");",
+							"        pm.expect(post).to.have.property(\"author\");",
+							"    });",
+							"});",
+							"",
+							"pm.test(\"Contents for posts are correctly structured\", function () {",
+							"    const jsonData = pm.response.json();",
+							"",
+							"    jsonData.forEach(post => {",
+							"        pm.expect(post.contents).to.be.an(\"array\");",
+							"        post.contents.forEach(content => {",
+							"            pm.expect(content).to.have.property(\"content\");",
+							"            pm.expect(content).to.have.property(\"paragraph\");",
+							"        });",
+							"    });",
+							"});",
+							"",
+							"pm.test(\"Tags for posts are correctly structured\", function () {",
+							"    const jsonData = pm.response.json();",
+							"",
+							"    jsonData.forEach(post => {",
+							"        pm.expect(post.tags).to.be.an(\"array\");",
+							"        post.tags.forEach(tag => {",
+							"            pm.expect(tag).to.have.property(\"name\");",
+							"        });",
+							"    });",
+							"});",
+							"",
+							"pm.test(\"Authors for posts are correctly structured\", function () {",
+							"    const jsonData = pm.response.json();",
+							"",
+							"    jsonData.forEach(post => {",
+							"        pm.expect(post.author).to.have.property(\"ID\");",
+							"        pm.expect(post.author).to.have.property(\"Username\");",
+							"    });",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/posts/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"posts",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete a Post",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response confirms post deletion\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"message\");",
+							"    pm.expect(jsonData.message).to.equal(\"Post deleted successfully\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/posts/posts/{{postId}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"posts",
+						"posts",
+						"{{postId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "authToken",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "postId",
+			"value": ""
+		}
+	]
+}
