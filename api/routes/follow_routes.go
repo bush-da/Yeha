@@ -10,6 +10,9 @@ import (
 func FollowRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	followController := controllers.FollowController{DB: db}
 
+	// Add the new route to fetch all followers
+	rg.GET("/followers", followController.GetAllFollowers)
+
 	// Public Routes: Get followers of a user
 	rg.GET("/users/:user_id/followers", followController.GetFollowers)
 
