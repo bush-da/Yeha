@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -8,6 +10,8 @@ import (
 // User represents a user in the Yeha application
 type User struct {
 	ID             uuid.UUID `gorm:"type:char(36);primaryKey"`
+	CreatedAt      time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt      time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	Username       string    `gorm:"size:45;not null"`
 	Email          string    `gorm:"size:45;unique;not null"`
 	Password       string    `gorm:"size:255;not null"`
@@ -17,12 +21,6 @@ type User struct {
 	IsAdmin        bool      `gorm:"default:false"`
 
 	// Relationships
-	// Posts     []Post     `gorm:"foreignKey:AuthorID"`
-	// Comments  []Comment  `gorm:"foreignKey:AuthorID"`
-	// Likes     []Like     `gorm:"foreignKey:AuthorID"`
-	// Following []Follower `gorm:"foreignKey:FollowerID"`
-	// Followers []Follower `gorm:"foreignKey:FollowedID"`
-	// User Model Relationships
 	Posts     []Post     `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE" json:"posts"`
 	Comments  []Comment  `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE" json:"comments"`
 	Likes     []Like     `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE" json:"likes"`
