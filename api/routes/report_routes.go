@@ -11,6 +11,7 @@ func ReportRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	reportController := controllers.ReportController{DB: db}
 
 	// Routes for reports
+	rg.GET("/reports", reportController.GetReports) // View reports
 	protected := rg.Group("/reports")
 	protected.Use(middleware.AuthMiddleware())
 	{
@@ -18,7 +19,7 @@ func ReportRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 		protected.POST("/", reportController.CreateReport)
 
 		// Admin routes
-		protected.GET("/", reportController.GetReports)                   // View reports
+
 		protected.POST("/:report_id/action", reportController.TakeAction) // Take action
 		protected.DELETE("/user/:user_id", reportController.DeleteUser)   // Delete user
 	}
