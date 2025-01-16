@@ -16,7 +16,7 @@ def profile(user_id):
     current_user_id = session.get('user_id')
 
     if not current_user_id:
-        flash('Please log in to follow users.')
+        flash('Please log in to see user profile.')
         return redirect(url_for('auth.login'))
 
     token = session.get('jwt_token')
