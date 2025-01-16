@@ -14,10 +14,10 @@ var DB *gorm.DB
 // ConnectDatabase initializes and connects to the database
 func ConnectDatabase() (*gorm.DB, error) {
 	// Fetch database credentials from environment variables
-	user := os.Getenv("MYSQL_USER")
-	password := os.Getenv("MYSQL_PASSWORD")
-	host := os.Getenv("MYSQL_HOST")
-	dbName := os.Getenv("MYSQL_DB")
+	user := os.Getenv("YEHA_MYSQL_USER")
+	password := os.Getenv("YEHA_MYSQL_PWD")
+	host := os.Getenv("YEHA_MYSQL_HOST")
+	dbName := os.Getenv("YEHA_MYSQL_DB")
 
 	// Create DSN (Data Source Name)
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, dbName)
