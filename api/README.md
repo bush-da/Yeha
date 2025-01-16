@@ -24,7 +24,7 @@ To run this API, ensure the following are installed on your system:
 - MySQL (version 8.0+)
 - Postman (optional, for testing API endpoints)
 
-## Installation
+🛠️ ## Installation
 1. Clone the repository:
    ```bash
    git clone https://github.com/bush-da/Yeha/
@@ -112,7 +112,7 @@ api/
    go test ./...
    ```
 
-## Contributing
+🤝## Contributing
 We welcome contributions! Please follow the steps below:
 1. Fork the repository.
 2. Create a new branch (`git checkout -b feature-name`).
