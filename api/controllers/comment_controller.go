@@ -57,13 +57,12 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 
 // Get all comments for a post
 func (cc *CommentController) GetComments(c *gin.Context) {
-
 	postID := c.Param("post_id") // Extract post ID from URL parameter
 
 	var comments []models.Comment
-	cc.DB.Preload("Author").Where("post_id = ?", postID).Find(&comments)
 
-	if err := cc.DB.Where("post_id = ?", postID).Find(&comments).Error; err != nil {
+	// Preload both Author and Post, and Post's Author
+	if err := cc.DB.Preload("Author").Preload("Post").Preload("Post.Author").Where("post_id = ?", postID).Find(&comments).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Comments not found"})
 		return
 	}
