@@ -3,11 +3,15 @@ package models
 import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"time"
 )
 
 // Comment represents a comment on a post.
 type Comment struct {
-	ID       uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
+	ID        uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
+	CreatedAt time.Time `gorm:"type:datetime;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt time.Time `gorm:"type:datetime;default:CURRENT_TIMESTAMP;autoUpdateTime" json:"updated_at"`
+
 	Content  string    `gorm:"type:text;not null" json:"content"`
 	AuthorID uuid.UUID `gorm:"type:char(36);not null" json:"author_id"`
 	PostID   uuid.UUID `gorm:"type:char(36);not null" json:"post_id"`
