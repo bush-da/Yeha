@@ -1,15 +1,21 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Tag represents a tag for posts (e.g., 'Python', 'Web Development').
 type Tag struct {
-	ID    uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
-	Name  string    `gorm:"type:varchar(45);unique;not null;index" json:"name"`
-	Posts []Post    `gorm:"many2many:post_tags;" json:"posts"`
+	ID        uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
+	Name      string    `gorm:"type:varchar(45);unique;not null;index" json:"name"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+
+	// Many-to-Many Relationship with Post
+	Posts []Post `gorm:"many2many:post_tags;" json:"posts"`
 }
 
 // BeforeCreate hook to generate UUID before saving to DB
