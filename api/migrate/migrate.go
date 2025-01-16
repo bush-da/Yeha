@@ -12,10 +12,10 @@ import (
 
 func main() {
 	// Set up the connection to your test database
-	user := os.Getenv("MYSQL_USER")
-	password := os.Getenv("MYSQL_PASSWORD")
-	host := os.Getenv("MYSQL_HOST")
-	dbName := os.Getenv("MYSQL_DB")
+	user := os.Getenv("YEHA_MYSQL_USER")
+	password := os.Getenv("YEHA_MYSQL_PWD")
+	host := os.Getenv("YEHA_MYSQL_HOST")
+	dbName := os.Getenv("YEHA_MYSQL_DB")
 
 	// Create DSN (Data Source Name)
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, dbName)
@@ -43,16 +43,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
-
-	// // Drop the foreign key constraint
-	// db.Exec("ALTER TABLE post_tags DROP FOREIGN KEY post_tags_ibfk_2;")
-
-	// // Modify the columns to CHAR(36) for UUID compatibility
-	// db.Exec("ALTER TABLE post_tags MODIFY COLUMN tag_id CHAR(36) NOT NULL;")
-	// db.Exec("ALTER TABLE tags MODIFY COLUMN id CHAR(36) NOT NULL;")
-
-	// // Re-add the foreign key constraint
-	// db.Exec("ALTER TABLE post_tags ADD CONSTRAINT post_tags_ibfk_2 FOREIGN KEY (tag_id) REFERENCES tags(id);")
 
 	// Check for success
 	fmt.Println("Database tables created or migrated successfully.")
