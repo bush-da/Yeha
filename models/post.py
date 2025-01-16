@@ -13,12 +13,12 @@ class Post(BaseModel, Base):
 
     title = Column(String(255), nullable=False)
     author_id = Column(String(60), ForeignKey('users.id'), nullable=False)
-    category_id = Column(String(60), ForeignKey('categories.id'), nullable=True)
+    # category_id = Column(String(60), ForeignKey('categories.id'), nullable=True)
 
     # Relationships
     reports = relationship('Report', back_populates='post', cascade="all, delete")
 
-    category = relationship('Category', back_populates='posts')
+    # category = relationship('Category', back_populates='posts')
     contents = relationship("Content", back_populates="post", cascade="all, delete-orphan")
     author = relationship("User", back_populates="posts")
     comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
@@ -67,5 +67,3 @@ class Post(BaseModel, Base):
                 storage.delete(tag)
 
         storage.save()
-
-x

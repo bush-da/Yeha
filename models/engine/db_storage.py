@@ -5,7 +5,6 @@ from models.base_model import Base
 from models.user import User
 from models.post import Post
 from models.comment import Comment
-from models.category import Category
 from models.content import Content
 from models.like import Like
 from models.tag import Tag
@@ -96,7 +95,6 @@ class DBStorage:
             "User": User,
             "Post": Post,
             "Comment": Comment,
-            "Category": Category,
             "Content": Content,
             "Like": Like,
             "Tag": Tag,

@@ -13,7 +13,7 @@ class User(BaseModel, Base):
     email = Column(String(45), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     profile_picture = Column(String(255), nullable=True)
-    gender = Column(Enum('male', 'female', 'other'))
+    gender = Column(Enum('male', 'female', 'other'), default='other', nullable=False)
     bio = Column(Text, nullable=True)
     is_admin = Column(Boolean, default=False)
 
