@@ -20,7 +20,9 @@ func UserRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	protected.Use(middleware.AuthMiddleware()) // Add auth middleware here
 
 	// Require authentication for the following routes
+	protected.GET("/", userController.GetAllUsers) // New route to fetch all users
 	protected.GET("/:id", userController.GetUserProfile)
 	protected.PUT("/:id", userController.UpdateUserProfile)
+	protected.PUT("/:id/password", userController.UpdatePassword)
 	protected.DELETE("/:id", userController.DeleteUser)
 }
