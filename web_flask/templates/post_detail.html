@@ -26,16 +26,15 @@
     <main>
         <section class="post-detail">
             <div class="post-header">
-	      <a href="/profile/{{ post.author.id }}">
-	      <img src="{{ url_for('static', filename='images/' + (post.author.profile_picture if post.author.profile_picture else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
+	      <a href="/profile/{{ post.get('author').get('ID') }}">
+	      <img src="{{ url_for('static', filename='images/' + (post.get('author').get('ProfilePicture') if post.get('author').get('ProfilePicture') else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
                 <div class="author-info">
-                    <h3 class="author-name">{{ post.author.username }}</h3></a>
-                    <p class="author-bio">{{ post.author.bio }}</p>
-		    {% if session.get('user_id') != post.author.id %}
-		    {% set is_following = session.get('user_id') in follower_map[post.author.id] %}
-		    <form action="{% if session.get('user_id') %} {{ url_for('follow.follow_user', user_id=post.author.id) }} {% else %} {{ url_for('auth.login') }} {% endif %}" method="POST" id="follow-form-{{ post.author.id }}" class="follow-form">
+                    <h3 class="author-name">{{ post.get('author').get('Username') }}</h3></a>
+                    <p class="author-bio">{{ post.get('author').get('Bio') }}</p>
+		    {% if session.get('user_id') != post.get('author').get('ID') %}
+		    <form action="{% if session.get('user_id') %} {{ url_for('follow.follow_user', user_id=post.get('author').get('ID')) }} {% else %} {{ url_for('auth.login') }} {% endif %}" method="POST" id="follow-form-{{ post.author.id }}" class="follow-form">
                       <button type="submit" class="follow-btn" id="follow-btn-{{ post.author.id }}">
-                                        {% if is_following %}
+                                        {% if post.get('is_following') %}
                                             Unfollow
                                         {% else %}
                                             Follow
@@ -61,14 +60,21 @@
 		{% endfor %}
 
             <div class="post-actions">
-	      <button class="like-btn" id="like-btn-{{ post.id }}" onclick="likePost('{{ post.id }}')">
-		<img src="{% if post.is_liked(session.get('user_id'), post.id) %}{{ url_for('static', filename='images/liked.png') }}{% else %}{{ url_for('static', filename='images/like.png') }}{% endif %}" alt="Like" class="action-icon">
+	      <button class="like-btn" id="like-btn-{{ post.get('id') }}" onclick="likePost('{{ post.get('id') }}')">
+		<img src="{% if is_liked %}
+			  {{ url_for('static', filename='images/liked.png') }}
+			  {% else %}
+			  {{ url_for('static', filename='images/like.png') }}
+			  {% endif %}"
+		     alt="Like"
+		     class="action-icon">
 	      </button>
-	      <span id="like-count-{{ post.id }}">{{ post.count_likes() }}</span>
+
+	      <span id="like-count-{{ post.get('id') }}">{{ count_likes }}</span>
 
                 <button class="comment-btn" onclick="toggleCommentBox()">
                     <img src="{{ url_for('static', filename='images/comment.png') }}" alt="Comment" class="action-icon">
-		    <span>{{ post.count_comment() }}</span>
+		    <span>{{ count_comments }}</span>
                 </button>
                 <button class="share-btn">
                     <img src="{{ url_for('static', filename='images/share.png') }}" alt="Share" class="action-icon">
@@ -86,8 +92,8 @@
                 <h3>Comments</h3>
                 {% for comment in comments %}
                 <div class="comment">
-                    <p><a href="/profile/{{ comment.author_id }}">{{ comment.author.username }}</a>: {{ comment.content }}</p>
-		    <form action="{{ url_for('comment.delete_comment', comment_id=comment.id) }}" method="POST">
+                    <p><a href="/profile/{{ comment['author_id'] }}">{{ comment.get('author').get('Username') }}</a>: {{ comment['content'] }}</p>
+		    <form action="{{ url_for('comment.delete_comment', comment_id=comment.id, post_id=post.id) }}" method="POST">
 		      {% if (session.get('user_id') in [comment.author_id, comment.post.author_id]) %}
 		      <button class="delete-btn">Delete</button>
 		      {% endif %}

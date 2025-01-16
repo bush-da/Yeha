@@ -9,25 +9,25 @@
 <body>
     <div class="container">
         <h2>Register</h2>
-        <form action="{{ url_for('auth.register') }}" method="POST">
+        <form action="{{ url_for('auth.register') }}" method="POST" autocomplete="off">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" class="form-control" required>
+                <input type="text" id="username" autocomplete="off" name="username" class="form-control" required>
             </div>
 
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" class="form-control" required>
+                <input type="email" id="email" autocomplete="off" name="email" class="form-control" required>
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-control" required>
+                <input type="password" id="password" autocomplete="off" name="password" class="form-control" required>
             </div>
 
             <div class="form-group">
                 <label for="confirm_password">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                <input type="password" autocomplete="off" id="confirm_password" name="confirm_password" class="form-control" required>
             </div>
 
             <div class="form-group">

@@ -117,16 +117,17 @@
         {% for post in posts %}
         <article class="blog-post">
           <div class="post-header">
-            <a href="/profile/{{ post.author_id }}">
-              <img src="{{ url_for('static', filename='images/' + (post.author.profile_picture if post.author.profile_picture else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
+	    <a href="/profile/{{ post.get('author').get('ID') }}">
+
+	      <img src="{{ url_for('static', filename='images/' + (post.get('author').get('ProfilePicture') if post.get('author').get('ProfilePicture') else 'user.png')) }}" alt="Author's profile picture" class="profile-pic">
+
               <div class="author-info">
-                <h3 class="author-name">{{ post.author.username }}</h3>
-                <p class="author-bio">{{ post.author.bio }}</p></a>
-	    {% if session.get('user_id') != post.author.id %}
-            {% set is_following = session.get('user_id') in follower_map[post.author.id] %}
-	    <form action="{% if session.get('user_id') %} {{ url_for('follow.follow_user', user_id=post.author.id) }} {% else %} {{ url_for('auth.login') }} {% endif %}" method="POST" id="follow-form-{{ post.author.id }}" class="follow-form">
+                <h3 class="author-name">{{ post.get('author').get('Username') }}</h3>
+		<p class="author-bio">{{ post.get('author').get('Bio') }}</p></a>
+	    {% if session.get('user_id') != post.get('author').get('ID') %}
+	    <form action="{% if session.get('user_id') %} {{ url_for('follow.follow_user', user_id=post.get('author').get('ID')) }} {% else %} {{ url_for('auth.login') }} {% endif %}" method="POST" id="follow-form-{{ post.author.id }}" class="follow-form">
               <button type="submit" class="follow-btn" id="follow-btn-{{ post.author.id }}">
-                {% if is_following %}
+                {% if post.get('is_following') %}
                 Unfollow
                 {% else %}
                 Follow
@@ -139,21 +140,27 @@
           <h2>{{ post.title }}</h2>
           {% for content in post.contents %}
           {% if content.file_url %}
-          <img src="{{ content.file_url }}" alt="Post image">
+          <img src="{{ content.get('file_url') }}" alt="Post image">
           {% else %}
           <p>{{ content.content | truncate(100) }}<span class="dots"></span></p>
           {% endif %}
           {% endfor %}
           <a href="{{ url_for('post.post_detail', post_id=post.id) }}" class="more-btn">More</a>
           <div class="post-actions">
-	    <button class="like-btn" id="like-btn-{{ post.id }}" onclick="likePost('{{ post.id }}')">
-	      <img src="{% if post.is_liked(session.get('user_id'), post.id ) %}{{ url_for('static', filename='images/liked.png') }}{% else %}{{ url_for('static', filename='images/like.png') }}{% endif %}" alt="Like" class="action-icon">
+	    <button class="like-btn" id="like-btn-{{ post.get('id') }}" onclick="likePost('{{ post.get('id') }}')">
+		<img src="{% if post.get('is_liked') %}
+			  {{ url_for('static', filename='images/liked.png') }}
+			  {% else %}
+			  {{ url_for('static', filename='images/like.png') }}
+			  {% endif %}"
+		     alt="Like"
+		     class="action-icon">
 	    </button>
-	    <span id="like-count-{{ post.id }}">{{ post.count_likes() }}</span>
+	    <span id="like-count-{{ post.id }}">{{ post.get('count_likes') }}</span>
 
             <button class="comment-btn" onclick="toggleCommentBox('{{ post.id }}')">
               <img src="{{ url_for('static', filename='images/comment.png') }}" alt="Comment" class="action-icon">
-	      <span>{{ post.count_comment() }}</span>
+	      <span>{{ post.get('count_comments') }}</span>
             </button>
             <!-- <button class="share-btn"> -->
             <!--   <img src="{{ url_for('static', filename='images/share.png') }}" alt="Share" class="action-icon"> -->
@@ -199,8 +206,8 @@
             </form>
           </div>
           <div class="tag">
-            {% for tag in post.tags %}
-            <span>#{{ tag.name }}</span>
+            {% for tag in post.get('tags') %}
+            <span>#{{ tag.get('name') }}</span>
             {% endfor %}
           </div>
         </article>

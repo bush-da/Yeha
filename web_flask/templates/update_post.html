@@ -24,44 +24,37 @@
     </header>
 
     <h1>Update Post</h1>
-    <form action="{{ url_for('post.update_post', post_id=post.id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ url_for('post.update_post', post_id=post.get('id')) }}" method="POST" enctype="multipart/form-data">
         <label for="title">Title:</label>
-        <input type="text" id="title" name="title" value="{{ post.title }}" required>
+        <input type="text" id="title" name="title" value="{{ post.get('title') }}" required>
 
-        <label for="category">Category:</label>
-        <select id="category" name="category">
-            <!-- Assuming categories are dynamically populated -->
-            {% for category in categories %}
-                <option value="{{ category.id }}" {% if category.id == post.category.id %} selected {% endif %}>{{ category.name }}</option>
-            {% endfor %}
-        </select>
 
         <label for="tags">Tags (comma-separated):</label>
-	<input type="text" id="tags" name="tags" value="{% for tag in post.tags %}{{ tag.name }}{% if not loop.last %},{% endif %}{% endfor %}">
+	<input type="text" id="tags" name="tags" value="{% for tag in post.get('tags') %}{{ tag.get('name') }}{% if not loop.last %},{% endif %}{% endfor %}">
         <div id="content-blocks">
             <!-- Prepopulate existing content blocks -->
-            {% for content in post.contents %}
+            {% for content in contents %}
                 <div class="content-block">
                     <!-- Hidden input to pass the content_id of existing content -->
-                    <input type="hidden" name="content_id_{{ loop.index0 }}" value="{{ content.id }}">
+                    <input type="hidden" name="content_id_{{ loop.index0 }}" value="{{ content.get('id') }}">
 
                     <label for="block-type-{{ loop.index0 }}">Content Type:</label>
                     <select id="block-type-{{ loop.index0 }}" name="block_type_{{ loop.index0 }}" onchange="toggleFields({{ loop.index0 }})">
-                        <option value="text" {% if content.content %} selected {% endif %}>Text</option>
-                        <option value="image" {% if content.file_url %} selected {% endif %}>Image</option>
+                        <option value="text" {% if content.get('content') %} selected {% endif %}>Text</option>
+                        <option value="image" {% if content.get('file_url') %} selected {% endif %}>Image</option>
                     </select>
 
                     <!-- Text content -->
-                    <div id="text-fields-{{ loop.index0 }}" class="content-fields" {% if content.file_url %} style="display: none;" {% endif %}>
+                    <div id="text-fields-{{ loop.index0 }}" class="content-fields" {% if content.get('file_url') %} style="display: none;" {% endif %}>
                         <label for="text-content-{{ loop.index0 }}">Text:</label>
                         <textarea id="text-content-{{ loop.index0 }}" name="text_content_{{ loop.index0 }}" rows="8" cols="80">{{ content.content }}</textarea>
                     </div>
 
                     <!-- Image content -->
-                    <div id="image-fields-{{ loop.index0 }}" class="content-fields" {% if not content.file_url %} style="display: none;" {% endif %}>
+                    <div id="image-fields-{{ loop.index0 }}" class="content-fields" {% if not content.get('file_url') %} style="display: none;" {% endif %}>
                         <label for="image-content-{{ loop.index0 }}">Image:</label>
                         <input type="file" id="image-content-{{ loop.index0 }}" name="image_content_{{ loop.index0 }}">
-                        <img src="{{ content.file_url }}" alt="Current Image" style="max-width: 100px;">
+                        <img src="{{ content.get('file_url') }}" alt="Current Image" style="max-width: 100px;">
                     </div>
 
                     <button type="button" onclick="removeContentBlock(this)">Remove Block</button>
@@ -73,33 +66,62 @@
         <button type="submit">Update Post</button>
     </form>
         <script>
-        function addContentBlock() {
-            const container = document.getElementById('content-blocks');
-            const blockIndex = container.children.length;
+        // function addContentBlock() {
+        //     const container = document.getElementById('content-blocks');
+        //     const blockIndex = container.children.length;
             
-            const newBlock = document.createElement('div');
-            newBlock.className = 'content-block';
-            newBlock.innerHTML = `
-                <label for="block-type-${blockIndex}">Content Type:</label>
-                <select id="block-type-${blockIndex}" name="block_type_${blockIndex}" onchange="toggleFields(${blockIndex})">
-                    <option value="text">Text</option>
-                    <option value="image">Image</option>
-                </select>
+        //     const newBlock = document.createElement('div');
+        //     newBlock.className = 'content-block';
+        //     newBlock.innerHTML = `
+        //         <label for="block-type-${blockIndex}">Content Type:</label>
+        //         <select id="block-type-${blockIndex}" name="block_type_${blockIndex}" onchange="toggleFields(${blockIndex})">
+        //             <option value="text">Text</option>
+        //             <option value="image">Image</option>
+        //         </select>
                 
-                <div id="text-fields-${blockIndex}" class="content-fields">
-                    <label for="text-content-${blockIndex}">Text:</label>
-                    <textarea id="text-content-${blockIndex}" name="text_content_${blockIndex}" rows="8" cols="80" placeholder="Write your paragraph(s) here..."></textarea>
-                </div>
+        //         <div id="text-fields-${blockIndex}" class="content-fields">
+        //             <label for="text-content-${blockIndex}">Text:</label>
+        //             <textarea id="text-content-${blockIndex}" name="text_content_${blockIndex}" rows="8" cols="80" placeholder="Write your paragraph(s) here..."></textarea>
+        //         </div>
                 
-                <div id="image-fields-${blockIndex}" class="content-fields" style="display: none;">
-                    <label for="image-content-${blockIndex}">Image:</label>
-                    <input type="file" id="image-content-${blockIndex}" name="image_content_${blockIndex}">
-                </div>
+        //         <div id="image-fields-${blockIndex}" class="content-fields" style="display: none;">
+        //             <label for="image-content-${blockIndex}">Image:</label>
+        //             <input type="file" id="image-content-${blockIndex}" name="image_content_${blockIndex}">
+        //         </div>
 
-                <button type="button" onclick="removeContentBlock(this)">Remove Block</button>
-            `;
-            container.appendChild(newBlock);
-        }
+        //         <button type="button" onclick="removeContentBlock(this)">Remove Block</button>
+        //     `;
+        //     container.appendChild(newBlock);
+          // }
+	  function addContentBlock() {
+	      const container = document.getElementById('content-blocks');
+	      const blockIndex = container.children.length;
+
+	      const newBlock = document.createElement('div');
+	      newBlock.className = 'content-block';
+	      newBlock.innerHTML = `
+        <label for="block-type-${blockIndex}">Content Type:</label>
+        <select id="block-type-${blockIndex}" name="block_type_${blockIndex}" onchange="toggleFields(${blockIndex})">
+            <option value="text">Text</option>
+            <option value="image">Image</option>
+        </select>
+        
+        <div id="text-fields-${blockIndex}" class="content-fields">
+            <label for="text-content-${blockIndex}">Text:</label>
+            <textarea id="text-content-${blockIndex}" name="text_content_${blockIndex}" rows="8" cols="80" placeholder="Write your paragraph(s) here..."></textarea>
+        </div>
+        
+        <div id="image-fields-${blockIndex}" class="content-fields" style="display: none;">
+            <label for="image-content-${blockIndex}">Image:</label>
+            <input type="file" id="image-content-${blockIndex}" name="image_content_${blockIndex}">
+        </div>
+
+        <button type="button" onclick="removeContentBlock(this)">Remove Block</button>
+    `;
+
+    // Append the new block at the end of the container
+	      container.appendChild(newBlock);
+	  }
 
         function toggleFields(index) {
             const type = document.getElementById(`block-type-${index}`).value;
