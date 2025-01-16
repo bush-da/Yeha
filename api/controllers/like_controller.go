@@ -103,3 +103,30 @@ func (lc *LikeController) DeleteLike(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Like deleted successfully"})
 }
+
+// Check if a specific user liked a post
+func (lc *LikeController) IsPostLikedByUser(c *gin.Context) {
+	postID := c.Param("post_id") // Extract post ID from URL parameter
+	userID := c.Param("user_id") // Extract user ID from URL parameter
+
+	// Convert IDs from string to uuid.UUID
+	postUUID, err := uuid.Parse(postID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Check if the like exists
+	var like models.Like
+	if err := lc.DB.Where("post_id = ? AND author_id = ?", postUUID, userUUID).First(&like).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{"liked": false}) // User has not liked the post
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"liked": true}) // User has liked the post
+}
