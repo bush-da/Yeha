@@ -41,6 +41,8 @@ def admin_dashboard():
 
     post_response = requests.get(f'{API_BASE_URL}/posts', headers=headers)
     posts = post_response.json()
+    if posts is None:
+        posts = []
     total_posts = len(posts)
 
     report_response = requests.get(f'{API_BASE_URL}/report/reports', headers=headers)
