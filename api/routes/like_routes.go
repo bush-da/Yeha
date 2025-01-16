@@ -11,13 +11,16 @@ func LikeRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	likeController := controllers.LikeController{DB: db}
 
 	// Public Route: Get all likes for a post
-	rg.GET("/posts/:post_id/likes", likeController.GetLikes)
+	rg.GET("/:post_id/likes", likeController.GetLikes)
+
+	// Public Route: Check if a user liked a specific post
+	rg.GET("/:post_id/like/:user_id", likeController.IsPostLikedByUser)
 
 	// Protected Routes (require authentication)
-	protected := rg.Group("/posts/:post_id/likes")
+	protected := rg.Group("/:post_id/like")
 	protected.Use(middleware.AuthMiddleware()) // Apply AuthMiddleware only to these routes
 	{
-		protected.POST("/", likeController.CreateLike)           // Like a post
+		protected.POST("", likeController.CreateLike)            // Like a post
 		protected.DELETE("/:like_id", likeController.DeleteLike) // Delete like
 	}
 }
