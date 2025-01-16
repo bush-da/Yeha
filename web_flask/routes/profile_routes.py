@@ -12,6 +12,13 @@ API_BASE_URL = 'http://localhost:8080/api'
 
 @profile_bp.route('/<user_id>', methods=['GET'])
 def profile(user_id):
+
+    current_user_id = session.get('user_id')
+
+    if not current_user_id:
+        flash('Please log in to follow users.')
+        return redirect(url_for('auth.login'))
+
     token = session.get('jwt_token')
 
     # Check if the post exists
