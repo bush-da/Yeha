@@ -9,17 +9,34 @@ import (
 
 func PostRoutes(rg *gin.RouterGroup, db *gorm.DB) {
 	postController := controllers.PostController{DB: db}
+	tagController := controllers.TagController{DB: db}
+	contentController := controllers.ContentController{DB: db}
 
-	// Public Route: Get all posts (no authentication required)
-	rg.GET("/posts", postController.GetAllPosts)
+	// Public Routes
+	rg.GET("/", postController.GetAllPosts)
+	rg.GET("/posts/:post_id", postController.GetPostByID)
+	// the route for fetching all tags
+	rg.GET("/tags", postController.GetAllTags)
 
-	// Protected Routes (require authentication)
-	protected := rg.Group("/")
-	protected.Use(middleware.AuthMiddleware()) // Apply AuthMiddleware only to these routes
+	// Routes for content
+	rg.GET("/contents/post/:post_id", contentController.GetContentsByPostID) // Get contents by post ID
+	rg.GET("/contents/:content_id", contentController.GetContentByID)        // Get a content block by ID
+
+	// Routes for tags
+	rg.DELETE("/tags/post/:post_id", tagController.DeleteTagsByPostID)
+	rg.POST("/tags", tagController.CreateTag)
+
+	// Protected Routes
+	protected := rg.Group("/posts")
+	protected.Use(middleware.AuthMiddleware())
 	{
-		protected.POST("/", postController.CreatePost)      // Create Post
-		protected.GET("/:id", postController.GetPostByID)   // Get Post by ID
-		protected.PUT("/:id", postController.UpdatePost)    // Update Post
-		protected.DELETE("/:id", postController.DeletePost) // Delete Post
+		protected.POST("/", postController.CreatePost)
+		protected.PUT("/:post_id", postController.UpdatePost)
+		protected.DELETE("/:post_id", postController.DeletePost)
+
+		// Routes for content
+		protected.POST("/contents", contentController.CreateContent)
+		protected.PUT("/contents/:content_id", contentController.UpdateContent)
+		protected.DELETE("/contents/:content_id", contentController.DeleteContent)
 	}
 }
