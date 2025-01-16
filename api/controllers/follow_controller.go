@@ -12,6 +12,20 @@ type FollowController struct {
 	DB *gorm.DB
 }
 
+// Get all follower relationships
+func (fc *FollowController) GetAllFollowers(c *gin.Context) {
+	var followers []models.Follower
+
+	// Fetch all follower relationships from the database
+	if err := fc.DB.Find(&followers).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch followers"})
+		return
+	}
+
+	// Return the raw list of followers
+	c.JSON(http.StatusOK, gin.H{"followers": followers})
+}
+
 // Follow a user
 func (fc *FollowController) FollowUser(c *gin.Context) {
 	followingID := c.Param("user_id")
@@ -58,38 +72,78 @@ func (fc *FollowController) FollowUser(c *gin.Context) {
 func (fc *FollowController) GetFollowers(c *gin.Context) {
 	userID := c.Param("user_id")
 
+	// Parse the user ID to UUID format
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
+	// Initialize an empty slice for followers
 	var followers []models.Follower
-	if err := fc.DB.Where("followed_id = ?", userUUID).Find(&followers).Error; err != nil { // Fixed field
+
+	// Preload the related User data (follower and followed)
+	if err := fc.DB.Preload("Follower").Where("followed_id = ?", userUUID).Find(&followers).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Followers not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"followers": followers})
+	// Build the customized response
+	var followerDetails []map[string]interface{}
+	for _, follow := range followers {
+		followerDetails = append(followerDetails, map[string]interface{}{
+			"id":              follow.Follower.ID,
+			"username":        follow.Follower.Username,
+			"email":           follow.Follower.Email,
+			"profile_picture": follow.Follower.ProfilePicture,
+			"bio":             follow.Follower.Bio,
+			"gender":          follow.Follower.Gender,
+		})
+	}
+
+	// Return the response
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":   userUUID,
+		"followers": followerDetails,
+	})
 }
 
 // Get all users a user is following
 func (fc *FollowController) GetFollowing(c *gin.Context) {
 	userID := c.Param("user_id")
 
+	// Parse the user ID
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
+	// Retrieve the list of users the current user is following
 	var following []models.Follower
-	if err := fc.DB.Where("follower_id = ?", userUUID).Find(&following).Error; err != nil { // FollowerID remains
+	if err := fc.DB.Preload("Followed").Where("follower_id = ?", userUUID).Find(&following).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Following not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"following": following})
+	// Build the customized response
+	var followingDetails []map[string]interface{}
+	for _, follow := range following {
+		followingDetails = append(followingDetails, map[string]interface{}{
+			"id":              follow.Followed.ID,
+			"username":        follow.Followed.Username,
+			"email":           follow.Followed.Email,
+			"profile_picture": follow.Followed.ProfilePicture,
+			"bio":             follow.Followed.Bio,
+			"gender":          follow.Followed.Gender,
+		})
+	}
+
+	// Return the response
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":   userUUID,
+		"following": followingDetails,
+	})
 }
 
 // Unfollow a user
