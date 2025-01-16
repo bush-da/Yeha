@@ -51,9 +51,12 @@ def admin_dashboard():
     tags_response = requests.get(f'{API_BASE_URL}/posts/tags', headers=headers)
 
     tags = tags_response.json()
-
-    tag_counts = [(tag.get('name'), tag.get('post_count')) for tag in tags.get('tags') if tag.get('post_count') > 0]  # Count posts per tag
-    popular_tags = sorted(tag_counts, key=lambda x: x[1], reverse=True)[:5]  # Sort by count (descending)
+    if len(tags) == 1:
+        tag_counts = 0
+        popular_tags = []
+    else:
+        tag_counts = [(tag.get('name'), tag.get('post_count')) for tag in tags.get('tags') if tag.get('post_count') > 0]  # Count posts per tag
+        popular_tags = sorted(tag_counts, key=lambda x: x[1], reverse=True)[:5]  # Sort by count (descending)
 
     return render_template('admin/overview.html',
                            total_users=total_users,
