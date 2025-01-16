@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"net/http"
+	"time"
 	"yeha-api/models"
 )
 
@@ -12,12 +13,61 @@ type PostController struct {
 	DB *gorm.DB
 }
 
+// Struct for Post Response
 type PostResponse struct {
 	ID       uuid.UUID        `json:"id"`
 	Title    string           `json:"title"`
 	Contents []models.Content `json:"contents"`
 	Tags     []models.Tag     `json:"tags"`
 	Author   models.User      `json:"author"`
+}
+
+// GetAllPosts - Fetches all posts with associated data
+func (pc *PostController) GetAllPosts(c *gin.Context) {
+	var posts []models.Post
+
+	// Preload relationships
+	if err := pc.DB.Preload("Contents").Preload("Tags").Preload("Author").Find(&posts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch posts: " + err.Error()})
+		return
+	}
+
+	// Format responses
+	var postResponses []PostResponse
+	for _, post := range posts {
+		postResponses = append(postResponses, PostResponse{
+			ID:       post.ID,
+			Title:    post.Title,
+			Contents: post.Contents,
+			Tags:     post.Tags,
+			Author:   post.Author,
+		})
+	}
+
+	c.JSON(http.StatusOK, postResponses)
+}
+
+func (pc *PostController) GetAllTags(c *gin.Context) {
+	var tags []struct {
+		ID        string    `json:"id"`
+		Name      string    `json:"name"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		PostCount int       `json:"post_count"`
+	}
+
+	// Query to fetch tags and count the associated posts
+	if err := pc.DB.Table("tags").
+		Select("tags.id, tags.name, tags.created_at, tags.updated_at, COUNT(post_tags.post_id) AS post_count").
+		Joins("LEFT JOIN post_tags ON post_tags.tag_id = tags.id").
+		Group("tags.id").
+		Scan(&tags).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tags"})
+		return
+	}
+
+	// Return the tags with their associated post counts
+	c.JSON(http.StatusOK, gin.H{"tags": tags})
 }
 
 func (pc *PostController) CreatePost(c *gin.Context) {
@@ -27,7 +77,7 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 		Tags     []models.Tag     `json:"tags"`
 	}
 
-	// Bind the Post JSON (for title and other fields, contents, and tags)
+	// Bind the Post JSON (for title, contents, and tags)
 	if err := c.ShouldBindJSON(&post); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -53,39 +103,44 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 	}
 
 	if err := pc.DB.Create(&postModel).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post: " + err.Error()})
 		return
 	}
 
 	// Create and associate contents with the post
 	for _, content := range post.Contents {
-		content.PostID = postModel.ID
-		if err := pc.DB.Create(&content).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create content"})
+		if content.Content == "" && content.FileURL == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Content or file URL must be provided"})
 			return
 		}
-		// Append each created content to the post
+		content.PostID = postModel.ID
+		if err := pc.DB.Create(&content).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create content: " + err.Error()})
+			return
+		}
 		postModel.Contents = append(postModel.Contents, content)
 	}
 
 	// Handle dynamic tags and associate them with the post
-	if len(post.Tags) > 0 {
-		// Loop through the tags and associate them with the post
-		for _, tag := range post.Tags {
-			// Check if the tag already exists
-			if err := pc.DB.Where("name = ?", tag.Name).First(&tag).Error; err != nil {
-				// If the tag doesn't exist, create it
-				if err := pc.DB.Create(&tag).Error; err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tag"})
-					return
-				}
-			}
-
-			// Associate the tag with the post
-			if err := pc.DB.Model(&postModel).Association("Tags").Append(&tag); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to associate tags with post"})
+	for _, tag := range post.Tags {
+		var existingTag models.Tag
+		if err := pc.DB.Where("name = ?", tag.Name).First(&existingTag).Error; err == gorm.ErrRecordNotFound {
+			// Tag doesn't exist, create a new one
+			if err := pc.DB.Create(&tag).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tag: " + err.Error()})
 				return
 			}
+		} else if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tag: " + err.Error()})
+			return
+		} else {
+			tag = existingTag
+		}
+
+		// Associate the tag with the post
+		if err := pc.DB.Model(&postModel).Association("Tags").Append(&tag); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to associate tags with post: " + err.Error()})
+			return
 		}
 	}
 
@@ -101,13 +156,11 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
-// GetPostByID - Fetches a post by its ID
-
 func (pc *PostController) GetPostByID(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("post_id")
 	var post models.Post
 
-	// Preload related data
+	// Preload related data for the post
 	if err := pc.DB.Preload("Author"). // Load Author data
 						Preload("Contents").             // Load Contents
 						Preload("Comments").             // Load Comments
@@ -120,12 +173,39 @@ func (pc *PostController) GetPostByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, post)
+	// Fetch followers of the post's author
+	var followers []models.Follower
+	if err := pc.DB.Where("followed_id = ?", post.AuthorID).Find(&followers).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch followers"})
+		return
+	}
+
+	// Extract follower IDs
+	followerIDs := make([]uuid.UUID, 0, len(followers))
+	for _, follower := range followers {
+		followerIDs = append(followerIDs, follower.FollowerID)
+	}
+
+	// Construct response
+	response := gin.H{
+		"post": gin.H{
+			"id":       post.ID,
+			"title":    post.Title,
+			"author":   post.Author,
+			"contents": post.Contents,
+			"comments": post.Comments,
+			"likes":    len(post.Likes),
+			"tags":     post.Tags,
+		},
+		"followers": followerIDs, // Include author follower IDs
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // UpdatePost - Updates an existing post by ID
 func (pc *PostController) UpdatePost(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("post_id")
 	var post models.Post
 
 	// Fetch the existing post with relationships
@@ -146,7 +226,9 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 	var requestBody struct {
 		Title    string           `json:"title"`
 		Contents []models.Content `json:"contents"`
-		TagIDs   []uuid.UUID      `json:"tag_ids"`
+		Tags     []struct {
+			Name string `json:"name"`
+		} `json:"tags"`
 	}
 
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
@@ -175,7 +257,7 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 				existingContent.FileURL = content.FileURL
 				existingContent.Content = content.Content
 				existingContent.Paragraph = content.Paragraph
-				existingContent.ContentType = content.ContentType
+
 				pc.DB.Save(&existingContent)   // Save updates
 				delete(contentMap, content.ID) // Remove from map to track processed items
 			} else {
@@ -195,18 +277,30 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 		pc.DB.Delete(&content)
 	}
 
-	// Update tags
+	// Handle dynamic tags
 	var updatedTags []models.Tag
-	if len(requestBody.TagIDs) > 0 {
-		if err := pc.DB.Find(&updatedTags, requestBody.TagIDs).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tags provided"})
+	for _, tagInput := range requestBody.Tags {
+		var tag models.Tag
+		if err := pc.DB.Where("name = ?", tagInput.Name).First(&tag).Error; err == gorm.ErrRecordNotFound {
+			// Tag doesn't exist, create it
+			tag = models.Tag{Name: tagInput.Name}
+			if err := pc.DB.Create(&tag).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tag: " + err.Error()})
+				return
+			}
+		} else if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tag: " + err.Error()})
 			return
 		}
+
+		// Add the tag to the list of updated tags
+		updatedTags = append(updatedTags, tag)
 	}
-	if len(updatedTags) > 0 {
-		pc.DB.Model(&post).Association("Tags").Replace(updatedTags)
-	} else {
-		pc.DB.Model(&post).Association("Tags").Clear()
+
+	// Replace post's tags with updated ones
+	if err := pc.DB.Model(&post).Association("Tags").Replace(updatedTags); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to associate tags with post"})
+		return
 	}
 
 	// Save the updated post
@@ -226,65 +320,50 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
+// DeletePost - Deletes a post
 func (pc *PostController) DeletePost(c *gin.Context) {
-	id := c.Param("id")
-
-	// Find the post
+	id := c.Param("post_id")
 	var post models.Post
+
+	// Preload Tags to handle post-tag relationships
 	if err := pc.DB.Preload("Tags").First(&post, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
 
 	// Authorization check
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+	userID, _ := c.Get("userID")
+	isAdmin, _ := c.Get("isAdmin")
+
+	if post.AuthorID != userID && !isAdmin.(bool) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	isAdmin, _ := c.Get("isAdmin") // Check if the user is an admin
-	authorUUID, _ := uuid.Parse(post.AuthorID.String())
-
-	// Allow deletion if the user is the author or an admin
-	if authorUUID != userID.(uuid.UUID) && !isAdmin.(bool) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this post"})
-		return
-	}
-
-	// Begin transaction
+	// Start a transaction
 	tx := pc.DB.Begin()
 
-	// Cleanup related entities
-	if err := tx.Where("post_id = ?", post.ID).Delete(&models.Content{}).Error; err != nil {
+	// Delete the post-tag relationships explicitly
+	if err := tx.Exec("DELETE FROM post_tags WHERE post_id = ?", post.ID).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete contents"})
-		return
-	}
-	if err := tx.Where("post_id = ?", post.ID).Delete(&models.Comment{}).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete comments"})
-		return
-	}
-	if err := tx.Where("post_id = ?", post.ID).Delete(&models.Like{}).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete likes"})
-		return
-	}
-	if err := tx.Where("post_id = ?", post.ID).Delete(&models.Report{}).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete reports"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post-tag relationships"})
 		return
 	}
 
-	// Remove tag associations
-	if err := tx.Model(&post).Association("Tags").Clear(); err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear tags"})
-		return
+	// Check and delete orphaned tags
+	for _, tag := range post.Tags {
+		var count int64
+		tx.Table("post_tags").Where("tag_id = ?", tag.ID).Count(&count)
+		if count == 0 {
+			if err := tx.Delete(&models.Tag{}, "id = ?", tag.ID).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete orphaned tags"})
+				return
+			}
+		}
 	}
 
-	// Finally, delete the post itself
+	// Delete the post
 	if err := tx.Delete(&post).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post"})
@@ -295,15 +374,4 @@ func (pc *PostController) DeletePost(c *gin.Context) {
 	tx.Commit()
 
 	c.JSON(http.StatusOK, gin.H{"message": "Post deleted successfully"})
-}
-
-// GetAllPosts - Fetches all posts
-func (pc *PostController) GetAllPosts(c *gin.Context) {
-	var posts []models.Post
-	if err := pc.DB.Find(&posts).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch posts"})
-		return
-	}
-
-	c.JSON(http.StatusOK, posts)
 }
