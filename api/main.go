@@ -18,9 +18,6 @@ func main() {
 	// Initialize Gin router
 	r := gin.Default()
 
-	// Apply middleware
-	// r.Use(middleware.AuthMiddleware())
-
 	// Group routes under "/api"
 	api := r.Group("/api")
 
@@ -33,11 +30,11 @@ func main() {
 	routes.PostRoutes(postGroup, db)
 
 	// Register comment routes under "/api/comments"
-	commentGroup := api.Group("/comments")
+	commentGroup := postGroup.Group("")
 	routes.CommentRoutes(commentGroup, db)
 
 	// Register like routes under "/api/likes"
-	likeGroup := api.Group("/likes")
+	likeGroup := postGroup.Group("") // Group likes under posts
 	routes.LikeRoutes(likeGroup, db)
 
 	// Register follow routes under "/api/follow"
