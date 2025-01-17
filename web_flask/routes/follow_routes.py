@@ -25,6 +25,8 @@ def follow_user(user_id):
         response = requests.get(f"{API_BASE_URL}/follow/users/{current_user_id}/following")
         if response.status_code == 200:
             following = response.json().get('following')  # Assuming the API returns a list of user IDs
+            if following is None:
+                following = []
             following_users_id = [followin.get('id') for followin in following]
             if user_id in following_users_id:
                 # Unfollow the user
