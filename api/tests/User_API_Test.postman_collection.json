@@ -8,12 +8,36 @@
 	"item": [
 		{
 			"name": "Register",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response contains user data\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"user\");",
+							"    pm.expect(jsonData.user).to.have.property(\"id\");",
+							"",
+							"    // Save user ID to a collection variable",
+							"    pm.collectionVariables.set(\"userId\", jsonData.user.id);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"username\": \"testuser2\",\n    \"email\": \"testuser2@gmail.com\",\n    \"password\": \"password123\"\n}",
+					"raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"testuser@example.com\",\n    \"password\": \"password123\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -38,18 +62,42 @@
 		},
 		{
 			"name": "login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response contains a token\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"token\");",
+							"",
+							"    // Save token to a collection variable",
+							"    pm.collectionVariables.set(\"authToken\", jsonData.token);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "POST",
 				"header": [
 					{
-						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzcyODU5OTIsImlzQWRtaW4iOmZhbHNlLCJ1c2VySUQiOiI5NGY5OTI1Mi1lNTdiLTQwZmUtOGJkMi1hNjcyM2M5YTZhNzcifQ.iHuRz-FOCoC05bUMbGvOcfQJLsIkzkolVfoKhlzhN_g",
-						"type": "text"
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\": \"tester1@gmail.com\",\n    \"password\": \"password123\"\n}",
+					"raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"password123\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -74,13 +122,48 @@
 		},
 		{
 			"name": "Get all users",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response contains users list\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an(\"array\");",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
 				"header": [
 					{
-						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzcyODU5OTIsImlzQWRtaW4iOmZhbHNlLCJ1c2VySUQiOiI5NGY5OTI1Mi1lNTdiLTQwZmUtOGJkMi1hNjcyM2M5YTZhNzcifQ.iHuRz-FOCoC05bUMbGvOcfQJLsIkzkolVfoKhlzhN_g",
-						"type": "text"
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
 					}
 				],
 				"url": {
@@ -101,17 +184,54 @@
 		},
 		{
 			"name": "get user by id",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							"console.log(\"userId:\", pm.collectionVariables.get(\"userId\"));",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response contains the correct user\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"user\");",
+							"    pm.expect(jsonData.user.ID).to.equal(pm.collectionVariables.get(\"userId\"));",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
 				"header": [
 					{
-						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzcyODU5OTIsImlzQWRtaW4iOmZhbHNlLCJ1c2VySUQiOiI5NGY5OTI1Mi1lNTdiLTQwZmUtOGJkMi1hNjcyM2M5YTZhNzcifQ.iHuRz-FOCoC05bUMbGvOcfQJLsIkzkolVfoKhlzhN_g",
-						"type": "text"
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/users/94f99252-e57b-40fe-8bd2-a6723c9a6a77",
+					"raw": "http://localhost:8080/api/users/{{userId}}",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -120,7 +240,7 @@
 					"path": [
 						"api",
 						"users",
-						"94f99252-e57b-40fe-8bd2-a6723c9a6a77"
+						"{{userId}}"
 					]
 				}
 			},
@@ -128,18 +248,54 @@
 		},
 		{
 			"name": "Update user",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"User updated successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"user\");",
+							"    pm.expect(jsonData.user.Username).to.equal(\"updateduser\");",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "PUT",
 				"header": [
 					{
-						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzcyODU5OTIsImlzQWRtaW4iOmZhbHNlLCJ1c2VySUQiOiI5NGY5OTI1Mi1lNTdiLTQwZmUtOGJkMi1hNjcyM2M5YTZhNzcifQ.iHuRz-FOCoC05bUMbGvOcfQJLsIkzkolVfoKhlzhN_g",
-						"type": "text"
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"username\": \"updateduser\",\n  \"bio\": \"Updated bio for the user\"\n}\n",
+					"raw": "{\n    \"Username\": \"updateduser\",\n    \"Bio\": \"Updated bio for testing\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -147,7 +303,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/users/94f99252-e57b-40fe-8bd2-a6723c9a6a77",
+					"raw": "http://localhost:8080/api/users/{{userId}}",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -156,7 +312,7 @@
 					"path": [
 						"api",
 						"users",
-						"94f99252-e57b-40fe-8bd2-a6723c9a6a77"
+						"{{userId}}"
 					]
 				}
 			},
@@ -164,13 +320,48 @@
 		},
 		{
 			"name": "Change password",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Password updated successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.equal(\"Password updated successfully\");",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "PUT",
 				"header": [
 					{
-						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzcyODU5OTIsImlzQWRtaW4iOmZhbHNlLCJ1c2VySUQiOiI5NGY5OTI1Mi1lNTdiLTQwZmUtOGJkMi1hNjcyM2M5YTZhNzcifQ.iHuRz-FOCoC05bUMbGvOcfQJLsIkzkolVfoKhlzhN_g",
-						"type": "text"
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
 					}
 				],
 				"body": {
@@ -183,7 +374,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/users/94f99252-e57b-40fe-8bd2-a6723c9a6a77/password",
+					"raw": "http://localhost:8080/api/users/{{userId}}/password",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -192,7 +383,7 @@
 					"path": [
 						"api",
 						"users",
-						"94f99252-e57b-40fe-8bd2-a6723c9a6a77",
+						"{{userId}}",
 						"password"
 					]
 				}
@@ -201,17 +392,52 @@
 		},
 		{
 			"name": "delete user",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"User deleted successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.equal(\"User deleted successfully\");",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "DELETE",
 				"header": [
 					{
-						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzcyODU5OTIsImlzQWRtaW4iOmZhbHNlLCJ1c2VySUQiOiI5NGY5OTI1Mi1lNTdiLTQwZmUtOGJkMi1hNjcyM2M5YTZhNzcifQ.iHuRz-FOCoC05bUMbGvOcfQJLsIkzkolVfoKhlzhN_g",
-						"type": "text"
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/api/users/94f99252-e57b-40fe-8bd2-a6723c9a6a77",
+					"raw": "http://localhost:8080/api/users/{{userId}}",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -220,7 +446,7 @@
 					"path": [
 						"api",
 						"users",
-						"94f99252-e57b-40fe-8bd2-a6723c9a6a77"
+						"{{userId}}"
 					]
 				}
 			},
