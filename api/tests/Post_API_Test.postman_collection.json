@@ -7,60 +7,6 @@
 	},
 	"item": [
 		{
-			"name": "login",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response contains a token\", function () {",
-							"    const jsonData = pm.response.json();",
-							"    pm.expect(jsonData).to.have.property(\"token\");",
-							"",
-							"    // Save token to a collection variable",
-							"    pm.collectionVariables.set(\"authToken\", jsonData.token);",
-							"    pm.collectionVariables.set(\"userId\", jsonData.user.id);",
-							"});",
-							""
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"email\": \"testuser@example.com\",\n    \"password\": \"newpassword456\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/api/users/login",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"api",
-						"users",
-						"login"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Create a Post",
 			"event": [
 				{
@@ -227,7 +173,7 @@
 						"exec": [
 							"pm.request.headers.add({",
 							"    key: \"Authorization\",",
-							"    value: `Bearer ${pm.collectionVariables.get(\"authToken\")}`",
+							"    value: `Bearer ${pm.globals.get(\"authToken\")}`",
 							"});",
 							""
 						],
@@ -257,8 +203,8 @@
 							"pm.test(\"Post contents are correctly fetched\", function () {",
 							"    const jsonData = pm.response.json();",
 							"    pm.expect(jsonData.contents.length).to.be.greaterThan(0);",
-							"    pm.expect(jsonData.contents[0].content).to.equal(\"This is the new second paragraph.\");",
-							"    pm.expect(jsonData.contents[0].paragraph).to.equal(1);  // Adjusted to 0 if that is the intended paragraph number.",
+							"    pm.expect(jsonData.contents[1].content).to.equal(\"This is the new second paragraph.\");",
+							"    pm.expect(jsonData.contents[1].paragraph).to.equal(1);  // Adjusted to 0 if that is the intended paragraph number.",
 							"});",
 							"",
 							"pm.test(\"Tags are correctly fetched\", function () {",
