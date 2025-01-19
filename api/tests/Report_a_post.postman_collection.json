@@ -1,0 +1,169 @@
+{
+	"info": {
+		"_postman_id": "06802bf5-8a29-4847-87f5-243ef95f30f8",
+		"name": "Report a post",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39343531"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.globals.get(\"authToken\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Report submitted successfully\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.equal(\"Report submitted successfully.\");",
+							"    pm.expect(jsonData.report).to.have.property(\"id\");",
+							"    pm.expect(jsonData.report.reason).to.equal(\"Spam content\");",
+							"    pm.expect(jsonData.report.post_id).to.exist;",
+							"    pm.expect(jsonData.report.reporter_id).to.exist;",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"post_id\": \"{{postId}}\",\n    \"reason\": \"Spam content\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/report/reports",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"report",
+						"reports"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "admin login",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch all Reports",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.request.headers.add({",
+							"    key: \"Authorization\",",
+							"    value: `Bearer ${pm.globals.get(\"authToken3\")}`",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response contains a list of reports\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"reports\");",
+							"    pm.expect(jsonData.reports).to.be.an(\"array\");",
+							"    pm.expect(jsonData.reports.length).to.be.greaterThan(0);",
+							"});",
+							"",
+							"pm.test(\"Each report has required fields\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    jsonData.reports.forEach((report) => {",
+							"        pm.expect(report).to.have.property(\"id\");",
+							"        pm.expect(report).to.have.property(\"reason\");",
+							"        pm.expect(report).to.have.property(\"user_id\");",
+							"        pm.expect(report).to.have.property(\"author_id\");",
+							"        pm.expect(report).to.have.property(\"created_at\");",
+							"        pm.expect(report).to.have.any.keys(\"post_id\", \"comment_id\");",
+							"    });",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/report/reports",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"report",
+						"reports"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "reportId",
+			"value": ""
+		}
+	]
+}
