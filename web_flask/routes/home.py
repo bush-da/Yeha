@@ -42,6 +42,8 @@ def index():
 
         # Filter posts that contain any of the selected tags
         filtered_posts = []
+        if posts is None:
+            posts = []
         for post in posts:
             post_tag_ids = {str(tag['id']) for tag in post.get('tags', [])}
             if post_tag_ids.intersection(tag_ids):
